@@ -1,0 +1,39 @@
+{
+  "albums": [
+    {
+      "id": "album_1",
+      "title": "Мой первый альбом",
+      "pages": [
+        {
+          "page_number": 1,
+          "images": [
+            {
+              "id": "image_1",
+              "url": "path/to/image1.jpg",
+              "position": {
+                "x": 100,
+                "y": 150
+              },
+              "size": {
+                "width": 200,
+                "height": 150
+              }
+            }
+          ],
+          "texts": [
+            {
+              "id": "text_1",
+              "content": "Пример текста",
+              "position": {
+                "x": 50,
+                "y": 300
+              },
+              "font_size": 14,
+              "font_color": "#000000"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

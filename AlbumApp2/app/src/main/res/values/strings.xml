@@ -1,0 +1,20 @@
+<resources>
+    <string name="app_name">MyAlbum</string>
+    <string name="home_screen_title">Album</string>
+    <string name="new_album_screen_title">Add new album</string>
+    <string name="account_screen_title">Account</string>
+    <string name="settings_screen_title">Settings</string>
+    <string name="create_new_album_on_home_screen">Create new album</string>
+    <string name="title_for_album_entry">Title</string>
+    <string name="descr_for_album_entry">Description</string>
+    <string name="date_of_the_event">Date of the event</string>
+    <string name="clear_date_time">Clear</string>
+    <string name="add_date_of_end">Add date of end</string>
+    <string name="remove_date_of_end">Remove date of end</string>
+    <string name="end_date_of_event_field">End date of event</string>
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
+    <string name="edit_album_main_info">Edit</string>
+    <string name="create_new_pages_in_album">Pages in album</string>
+
+</resources>
