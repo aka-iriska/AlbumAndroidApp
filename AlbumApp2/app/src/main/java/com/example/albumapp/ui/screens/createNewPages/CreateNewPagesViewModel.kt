@@ -1,5 +1,7 @@
 package com.example.albumapp.ui.screens.createNewPages
 
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -13,16 +15,12 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 
 class CreateNewPagesViewModel(
-    savedStateHandle: SavedStateHandle,
-    private val albumsRepository: AlbumsRepository
+    savedStateHandle: SavedStateHandle, private val albumsRepository: AlbumsRepository
 ) : ViewModel() {
-
 
     private val albumId: Int = checkNotNull(savedStateHandle[CreateNewPagesDestination.AlbumIdArg])
     val uiState: StateFlow<CreateNewPagesUiState> =
-        albumsRepository.getAlbumDetailsStreamViaForeignKey(albumId)
-            .filterNotNull()
-            .map {
+        albumsRepository.getAlbumDetailsStreamViaForeignKey(albumId).filterNotNull().map {
                 CreateNewPagesUiState(albumDetails = it.toAlbumUiState())
             }.stateIn(
                 scope = viewModelScope,
@@ -33,8 +31,11 @@ class CreateNewPagesViewModel(
     companion object {
         private const val TIMEOUT_MILLIS = 5_000L
     }
-}
+
+    }
+
 data class CreateNewPagesUiState(
     //val outOfStock: Boolean = true,
     val albumDetails: AlbumUiState = AlbumUiState()
 )
+

@@ -20,34 +20,34 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 
 class CurrentAlbumViewModel(
-    savedStateHandle: SavedStateHandle,
-    private val albumsRepository: AlbumsRepository
+    savedStateHandle: SavedStateHandle, private val albumsRepository: AlbumsRepository
 ) : ViewModel() {
 
 
     private val albumId: Int = checkNotNull(savedStateHandle[CurrentAlbumDestination.AlbumIdArg])
     val uiState: StateFlow<CurrentAlbumUiState> =
-        albumsRepository.getAlbumDetailsStreamViaForeignKey(albumId)
-            .filterNotNull()
-            .map {
-                CurrentAlbumUiState(albumDetails = it.toAlbumUiState())
-            }.stateIn(
-                scope = viewModelScope,
-                started = SharingStarted.WhileSubscribed(TIMEOUT_MILLIS),
-                initialValue = CurrentAlbumUiState()
-            )
+        albumsRepository.getAlbumDetailsStreamViaForeignKey(albumId).filterNotNull().map {
+            CurrentAlbumUiState(albumDetails = it.toAlbumUiState())
+        }.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(TIMEOUT_MILLIS),
+            initialValue = CurrentAlbumUiState()
+        )
 
     companion object {
         private const val TIMEOUT_MILLIS = 5_000L
     }
-    suspend fun findTitle(albumId:Int):String{
+
+    suspend fun findTitle(albumId: Int): String {
         return albumsRepository.getAlbumTitleForDetailed(albumId)
     }
 }
+
 data class CurrentAlbumUiState(
     //val outOfStock: Boolean = true,
     val albumDetails: AlbumUiState = AlbumUiState()
 )
+
 @Entity(
     tableName = "albumDetailsTable", foreignKeys = arrayOf(
         ForeignKey(
@@ -61,46 +61,39 @@ data class CurrentAlbumUiState(
 data class AlbumDetailed(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
     val albumId: Int,
-    val countPages: Int
+    val elements: List<PageElement>,
+    val pageNumber: Int
 )
+
+data class PageElement(
+    val id: Int = (System.currentTimeMillis() % Int.MAX_VALUE).toInt(), // Генерация уникального ID
+    val type: ElementType = ElementType.STICKER,
+    val offsetX: Float = 0f,
+    val offsetY: Float = 0f,
+    val scale: Float = 1f,
+    val rotation: Float = 0f,
+    val resourceId: Int? = null, // для стикеров и изображений
+    val text: String? = null // для текстовых полей
+)
+
+enum class ElementType {
+    STICKER, IMAGE, TEXT_FIELD
+}
 
 
 data class AlbumUiState(
     val id: Int = 0,
     val albumId: Int = 0,
-    val countPages: Int = 0,
-    val currentPage: Int = 0,
-    val selectedElement: PageElement? = null,
+    val elements: List<PageElement> = emptyList(),
+    val pageNumber: Int = 0,
+    //val selectedElement: PageElement? = null,
     val isEditing: Boolean = false
 )
-fun AlbumUiState.toAlbumDetailed():AlbumDetailed = AlbumDetailed(
-    id = id, albumId = albumId, countPages = countPages
-)
-fun AlbumDetailed.toAlbumUiState():AlbumUiState = AlbumUiState(
-    id = id, albumId = albumId, countPages = countPages
+
+fun AlbumUiState.toAlbumDetailed(): AlbumDetailed = AlbumDetailed(
+    id = id, albumId = albumId, pageNumber = pageNumber, elements = elements
 )
 
-data class Page(
-    val pageNumber: Int,
-    val elements: List<PageElement>
+fun AlbumDetailed.toAlbumUiState(): AlbumUiState = AlbumUiState(
+    id = id, albumId = albumId, pageNumber = pageNumber
 )
-
-data class PageElement(
-    val id: String,
-    val type: ElementType,
-    val position: Position,
-    val size: Size? = null,
-    val content: String? = null,
-    val src: String? = null,
-    val font: Font? = null
-)
-
-enum class ElementType {
-    IMAGE, TEXT
-}
-
-data class Position(val x: Int, val y: Int)
-
-data class Size(val width: Int, val height: Int)
-
-data class Font(val size: Int, val color: String)

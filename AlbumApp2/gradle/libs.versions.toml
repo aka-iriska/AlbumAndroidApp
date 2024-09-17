@@ -1,8 +1,10 @@
 [versions]
-agp = "8.5.1"
+accompanistSvg = "0.28.0"
+agp = "8.6.0"
 coil = "2.7.0"
 coilCompose = "2.0.0"
 coilComposeVersion = "2.4.0"
+coilSvg = "2.4.0"
 kotlin = "1.9.0"
 coreKtx = "1.13.1"
 junit = "4.13.2"
@@ -23,11 +25,13 @@ uiTestJunit4Android = "1.6.8"
 uiTextGoogleFonts = "1.6.8"
 
 [libraries]
+accompanist-svg = { module = "com.google.accompanist:accompanist-svg", version.ref = "accompanistSvg" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 coil = { module = "io.coil-kt:coil", version.ref = "coil" }
 coil-compose-v200 = { module = "io.coil-kt:coil-compose", version.ref = "coilCompose" }
 coil-kt-coil-compose = { module = "io.coil-kt:coil-compose", version.ref = "coilComposeVersion" }
 coil-svg = { module = "io.coil-kt:coil-svg", version.ref = "coilCompose" }
+coil-svg-v240 = { module = "io.coil-kt:coil-svg", version.ref = "coilSvg" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
