@@ -104,7 +104,8 @@ dependencies {
     testImplementation(libs.kotlinx.coroutines.test)
     //
     implementation(libs.lifecycle.viewmodel.compose)
-
+    // for back handler
+    implementation("androidx.activity:activity:1.6.0-alpha05")
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.0")
     androidTestImplementation(platform(libs.androidx.compose.bom))
