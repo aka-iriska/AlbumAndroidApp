@@ -3,6 +3,7 @@ package com.example.albumapp.ui.screens.createNewPages
 import android.content.Context
 import android.graphics.pdf.PdfDocument.Page
 import android.util.Log
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -17,7 +18,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddCircle
@@ -31,20 +31,21 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconToggleButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.unit.IntSize
@@ -57,52 +58,90 @@ import coil.request.ImageRequest
 import com.example.albumapp.R
 import com.example.albumapp.data.AppViewModelProvider
 import com.example.albumapp.ui.components.forNewPage.DraggableSticker
+import com.example.albumapp.ui.components.forNewPage.SaveChangesModal
 import com.example.albumapp.ui.navigation.AppTopBar
 import com.example.albumapp.ui.navigation.NavigationDestination
-import com.example.albumapp.ui.screens.currentAlbum.CurrentAlbumViewModel
 import com.example.albumapp.ui.screens.currentAlbum.ElementType
 import com.example.albumapp.ui.screens.currentAlbum.PageElement
+import kotlinx.coroutines.launch
+import kotlin.math.min
 
 object CreateNewPagesDestination : NavigationDestination {
     override val route = "create_new_pages_in_album"
     override val titleRes = R.string.create_new_pages_in_album
     const val AlbumIdArg = "itemId"
-    val routeWithArgs = "${CreateNewPagesDestination.route}/{$AlbumIdArg}"
+    val routeWithArgs = "$route/{$AlbumIdArg}"
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CreateNewPages(
+    modifier: Modifier = Modifier,
     navigateBack: (Int) -> Unit = {},
-    albumViewModel: CurrentAlbumViewModel = viewModel(factory = AppViewModelProvider.Factory),
-    modifier: Modifier = Modifier
-) {
-    val albumUiState = albumViewModel.uiState.collectAsState()
+    albumViewModel: CreateNewPagesViewModel = viewModel(factory = AppViewModelProvider.Factory),
+
+    ) {
+    val albumUiState = albumViewModel.pagesUiState
     val context = LocalContext.current
     val stickersList =
-        listOf<Int>(R.raw.heart, R.raw.star, R.raw.scotch, R.raw.sea_plant, R.raw.instax_square)
+        listOf(R.raw.heart, R.raw.star, R.raw.scotch, R.raw.sea_plant, R.raw.instax_square)
+    val openAlertDialog = remember { mutableStateOf(false) }
+    val coroutineScope = rememberCoroutineScope()
     Scaffold(topBar = {
-        AppTopBar(title = "New pages in album",
-            navigateBack = { navigateBack(albumUiState.value.albumDetails.albumId) })
-    }) { innerpadding ->
+        AppTopBar(title = "New pages in album", navigateBack = {
+            openAlertDialog.value = true
+        })
+    }) { innerPadding ->
+        BackHandler { openAlertDialog.value = !openAlertDialog.value }
+        when {
+            openAlertDialog.value -> {
+                SaveChangesModal(
+                    saveChanges = {
+                        coroutineScope.launch {
+                            /*todo create saving to bd and only then redirect to prev screen
+                            *  add success or not*/
+                            albumViewModel.savePagesForAlbum()
+                            openAlertDialog.value = false
+                            navigateBack(albumUiState.albumId)
+                        }
+                    },
+                    onDismissRequest = { openAlertDialog.value = false },
+                    onNavigateBack = {
+                        openAlertDialog.value = false
+                        navigateBack(albumUiState.albumId)
+                    })
+            }
+        }
+
         CreateNewPagesBody(
             stickersList = stickersList,
+
             context = context,
-            modifier = modifier.padding(innerpadding)
+            modifier = modifier.padding(innerPadding),
+            onUpdate = albumViewModel::updateUiState,
+            addedElements = albumUiState.pagesMap
         )
     }
 }
 
 @Composable
-fun CreateNewPagesBody(stickersList: List<Int>, context: Context, modifier: Modifier = Modifier) {
+fun CreateNewPagesBody(
+    stickersList: List<Int>,
+    context: Context,
+    modifier: Modifier = Modifier,
+    onUpdate: (Int, PageElement, Int) -> Unit,
+    addedElements: Map<Int, List<PageElement>>
+) {
     var stickersPressed by remember { mutableStateOf(false) }
     var settingsPressed by remember { mutableStateOf(false) }
     var addImagePressed by remember { mutableStateOf(false) }
-    val addedElements = remember { mutableStateListOf<PageElement>() }
+    var pageNumber by remember { mutableIntStateOf(0) }
+    //val addedElements = remember { mutableStateListOf<PageElement>() }
+    var pageSize by remember { mutableStateOf(IntSize.Zero) }
+
     Column(modifier = modifier.fillMaxSize()) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
+            modifier = Modifier.fillMaxWidth()
             //.background(MaterialTheme.colorScheme.surfaceContainerLow)
         ) {
             LazyRow(
@@ -112,9 +151,9 @@ fun CreateNewPagesBody(stickersList: List<Int>, context: Context, modifier: Modi
                     .background(MaterialTheme.colorScheme.surfaceContainerHigh),
                 verticalAlignment = Alignment.CenterVertically
             ) {
+
                 item {
-                    IconToggleButton(
-                        checked = stickersPressed,
+                    IconToggleButton(checked = stickersPressed,
                         onCheckedChange = { stickersPressed = it }) {
                         if (stickersPressed) {
                             Icon(
@@ -131,29 +170,32 @@ fun CreateNewPagesBody(stickersList: List<Int>, context: Context, modifier: Modi
                         }
                     }
                 }
+                /*todo разобраться со scaling при flip экране*/
                 if (stickersPressed) {
                     items(stickersList) { stickerResId ->
                         SvgSticker(
                             stickerId = stickerResId,
                             context = context,
                             onClick = {
-                                addedElements.add(
+                                onUpdate(
+                                    pageNumber,
                                     PageElement(
-                                        resourceId = stickerResId, // Используем идентификатор ресурса стикера
-                                        offsetX = 100f,
-                                        offsetY = 100f,
-                                        scale = 1f,
-                                        rotation = 0f
-                                    )
+                                        type = ElementType.STICKER,
+                                        offsetY = 0f / pageSize.width,
+                                        offsetX = 0f / pageSize.height,
+                                        scale = 1f / min(pageSize.width, pageSize.height),
+                                        rotation = 0f,
+                                        resourceId = stickerResId
+                                    ),
+                                    -1
                                 )
                             },
                             modifier = Modifier.stickerChoice()
                         )
                     }
-                }
+                }/*todo add adding images*/
                 item {
-                    IconToggleButton(
-                        checked = addImagePressed,
+                    IconToggleButton(checked = addImagePressed,
                         onCheckedChange = { addImagePressed = it }) {
                         if (addImagePressed) {
                             Icon(
@@ -171,8 +213,7 @@ fun CreateNewPagesBody(stickersList: List<Int>, context: Context, modifier: Modi
                     }
                 }
                 item {
-                    IconToggleButton(
-                        checked = settingsPressed,
+                    IconToggleButton(checked = settingsPressed,
                         onCheckedChange = { settingsPressed = it }) {
                         if (settingsPressed) {
                             Icon(
@@ -188,14 +229,30 @@ fun CreateNewPagesBody(stickersList: List<Int>, context: Context, modifier: Modi
                             )
                         }
                     }
+                }/*todo add adding new pages*/
+                item {
+                    IconToggleButton(checked = addImagePressed,
+                        onCheckedChange = { addImagePressed = it }) {
+                        if (addImagePressed) {
+                            Icon(
+                                Icons.Filled.AddCircle,
+                                contentDescription = "Choose Image",
+                                modifier = Modifier.stickerChoice()
+                            )
+                        } else {
+                            Icon(
+                                Icons.Outlined.Add,
+                                contentDescription = "Add image",
+                                modifier = Modifier.stickerChoice()
+                            )
+                        }
+                    }
                 }
 
             }
         }
         Column(
-            modifier = Modifier
-                .fillMaxSize(),
-            verticalArrangement = Arrangement.Center
+            modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.Center
         ) {
             Column(
                 modifier = Modifier
@@ -204,30 +261,60 @@ fun CreateNewPagesBody(stickersList: List<Int>, context: Context, modifier: Modi
                     .shadow(10.dp, shape = RoundedCornerShape(8.dp)) // shadow с закруглением
                     .clip(RoundedCornerShape(8.dp)) // Clip для правильной тени
                     .background(MaterialTheme.colorScheme.surfaceContainerHighest)
+                    .onSizeChanged { newSize -> pageSize = newSize }
 
             ) {
-                CanvasBody(addedElements)
+                /*todo добавить padding от края, заходя за который стикер будет удаляться*/
+                CanvasBody(
+                    pageSize = pageSize,
+                    addedElements,
+                    onUpdate = onUpdate
+                )
             }
         }
     }
 }
+
 @Composable
-fun CanvasBody(elements: List<PageElement> = emptyList(), onUpdate: (PageElement) -> Unit = {}){
-    Box(modifier = Modifier.fillMaxSize()) {
-        elements.forEach { element ->
-            when (element.type) {
-                ElementType.STICKER -> DraggableSticker(
-                    stickerId = element.resourceId!!,
-                    context = LocalContext.current,
-                    pageSize = IntSize(300, 500),
-                    sticker = element,
-                    onStickerUpdate = onUpdate
-                )
-                ElementType.IMAGE -> {}
-                ElementType.TEXT_FIELD -> {}
+fun CanvasBody(
+    pageSize: IntSize,
+    elements: Map<Int, List<PageElement>> = emptyMap(),
+    //onUpdateCheck: (Int, PageElement) -> Unit,
+    onUpdate: (Int, PageElement, Int) -> Unit
+) {
+
+
+    Box(
+        modifier = Modifier.fillMaxSize()
+    ) {
+        elements.forEach { content ->
+            var pageNumber = content.key
+            content.value.forEach { element ->
+                val stickerX = element.offsetX * pageSize.width
+                val stickerY = element.offsetY * pageSize.height
+                val stickerScale = element.scale * min(pageSize.width, pageSize.height)
+                when (element.type) {
+                    ElementType.STICKER -> DraggableSticker(
+                        pageNumber = pageNumber,
+                        stickerId = element.resourceId,
+                        context = LocalContext.current,
+                        pageSize = pageSize,
+                        sticker = element.copy(
+                            offsetX = stickerX,
+                            offsetY = stickerY,
+                            scale = stickerScale
+                        ),
+                        onStickerUpdate = onUpdate,
+                        //onUpdateCheck = onUpdateCheck
+                    )
+
+                    ElementType.IMAGE -> {}
+                    ElementType.TEXT_FIELD -> {}
+                }
             }
+
         }
-        }
+    }
 }
 
 //@Composable
@@ -261,12 +348,12 @@ fun CanvasBody(elements: List<PageElement> = emptyList(), onUpdate: (PageElement
 //}
 
 @Composable
-fun SvgSticker(stickerId: Int, onClick:()->Unit, context: Context, modifier: Modifier = Modifier) {
+fun SvgSticker(
+    stickerId: Int, onClick: () -> Unit, context: Context, modifier: Modifier = Modifier
+) {
     // Получаем идентификатор ресурса по имени файла (без расширения)
     val painter = rememberAsyncImagePainter(
-        model = ImageRequest.Builder(context)
-            .data(stickerId)
-            .decoderFactory(SvgDecoder.Factory())
+        model = ImageRequest.Builder(context).data(stickerId).decoderFactory(SvgDecoder.Factory())
             .build(),
     )
 
@@ -277,7 +364,7 @@ fun SvgSticker(stickerId: Int, onClick:()->Unit, context: Context, modifier: Mod
     Image(
         painter = painter,
         contentDescription = "Sticker",
-        modifier = modifier.clickable ( onClick = onClick )
+        modifier = modifier.clickable(onClick = onClick)
     )
 }
 

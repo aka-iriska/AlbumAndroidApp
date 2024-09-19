@@ -64,14 +64,14 @@ fun CurrentAlbum(
             )
         }
     ) { innerpadding ->
-        LaunchedEffect(uiState.value.albumDetails.albumId) {
+        LaunchedEffect(uiState.value.albumId) {
             albumTitle =
-                albumViewModel.findTitle(uiState.value.albumDetails.albumId)
+                albumViewModel.findTitle(uiState.value.albumId)
 
         }
 
         CurrentAlbumBody(
-            albumUiState = uiState.value.albumDetails,
+            albumUiState = uiState.value,
             title = albumTitle,
             onEditClick = onEditClick,
             //onItemValueChange = albumViewModel::updateUiState,
@@ -82,7 +82,7 @@ fun CurrentAlbum(
 
 @Composable
 fun CurrentAlbumBody(
-    albumUiState: AlbumUiState,
+    albumUiState: CurrentAlbumUiState,
     title: String,
     onEditClick: (Int) -> Unit = {},
     modifier: Modifier = Modifier
@@ -100,7 +100,7 @@ fun CurrentAlbumBody(
                 dimensionResource(id = R.dimen.padding_from_edge)
             )
         ) {
-            if (albumUiState.countPages == 0) {
+            if (albumUiState.pagesMap.isEmpty()) {
                 Column(
                     modifier = Modifier.fillMaxSize(),
                     verticalArrangement = Arrangement.Center
@@ -138,7 +138,7 @@ fun CurrentAlbumBody(
 fun ShowAlbumDetailesPreview() {
     AlbumAppTheme {
         Surface(modifier = Modifier.fillMaxSize()) {
-            CurrentAlbumBody(albumUiState = AlbumUiState(), title = "Example")
+            CurrentAlbumBody(albumUiState = CurrentAlbumUiState(), title = "Example")
         }
     }
 }
