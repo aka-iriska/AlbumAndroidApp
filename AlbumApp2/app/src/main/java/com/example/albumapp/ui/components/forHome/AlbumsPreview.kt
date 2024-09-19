@@ -47,7 +47,7 @@ fun AlbumsOnHomeScreen(
     onEditClick:(Int)->Unit,
     onAlbumClick: (Int) -> Unit,
     albumList: List<Album> = emptyList(),
-    onPlusButtonClick: () -> Unit,
+    onPlusButtonClick: () -> Unit,/*todo create the same float button*/
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -184,7 +184,10 @@ fun EveryAlbumCard(
     when {
         openAlertDialog.value -> {
             MinimalDialog(
-                onEditClick = onEditClick,
+                onEditClick = {
+                    onEditClick(it)
+                    openAlertDialog.value = false
+                              },
                 onDismissRequest = { openAlertDialog.value = false },
                 elementId = albumElement.id,
                 elementTitle = albumElement.title,

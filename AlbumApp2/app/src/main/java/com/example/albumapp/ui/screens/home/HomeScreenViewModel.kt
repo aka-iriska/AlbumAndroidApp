@@ -18,7 +18,6 @@ class HomeViewModel(albumsRepository: AlbumsRepository) : ViewModel() {
         albumsRepository
             .getAllAlbumsStream()
             .map{ sth ->
-                Log.d("mapFlow", sth.toString())
                 HomeUiState(sth)
             }
             .stateIn(

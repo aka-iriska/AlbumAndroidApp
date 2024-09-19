@@ -31,7 +31,7 @@ interface AlbumsRepository {
      */
     suspend fun getAlbumTitleForDetailed(albumId:Int): String
 
-    fun getAlbumDetailsStreamViaForeignKey(albumId: Int): Flow<AlbumDetailed?>
+    fun getAlbumDetailsStreamViaForeignKey(albumId: Int): Flow<List<AlbumDetailed>>
 
     /**
      * Insert album in the data source

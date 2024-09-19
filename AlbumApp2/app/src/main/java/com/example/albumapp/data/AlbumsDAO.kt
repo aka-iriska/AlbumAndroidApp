@@ -45,22 +45,6 @@ interface AlbumsDAO {
     @Query("SELECT a.title FROM albumsTable a INNER JOIN albumDetailsTable ad ON a.id = ad.albumId WHERE albumId = :albumId")
     fun getAlbumTitleForDetailed(albumId:Int):Flow<String>
 
-    @Query("SELECT ad.id, ad.albumId, ad.countPages from albumDetailsTable ad INNER JOIN albumsTable a ON a.id = ad.albumId WHERE albumId = :albumId ")
-    fun getAlbumDetailsStreamViaForeignKey(albumId: Int): Flow<AlbumDetailed?>
+    @Query("SELECT ad.id, ad.albumId, ad.pageNumber, ad.type,ad.offsetX,ad.offsetY,ad.scale,ad.rotation,ad.resourceId,ad.text,ad.zIndex from albumDetailsTable ad INNER JOIN albumsTable a ON a.id = ad.albumId WHERE albumId = :albumId ")
+    fun getAlbumDetailsStreamViaForeignKey(albumId: Int): Flow<List<AlbumDetailed>>
 }
-/**
- *todo
- * [ksp]
- * D:/apps/AlbumApp2/app/src/main/java/com/example/albumapp/data/AlbumsDAO.kt:49:
- * The query returns some columns [title, artist, description, imageCover, dateOfCreation, dateOfActivity, endDateOfActivity]
- * which are not used by com.example.albumapp.ui.screens.currentAlbum.AlbumDetailed.
- * You can use @ColumnInfo annotation on the fields to specify the mapping.
- * You can annotate the method with @RewriteQueriesToDropUnusedColumns to direct Room to rewrite your query to avoid fetching unused columns.
- * You can suppress this warning by annotating the method with @SuppressWarnings(RoomWarnings.CURSOR_MISMATCH).
- * Columns returned by the query: id, albumId, countPages, id, title, artist, description, imageCover, dateOfCreation, dateOfActivity, endDateOfActivity.
- * TODO
- * [ksp]
- * D:/apps/AlbumApp2/app/src/main/java/com/example/albumapp/ui/screens/currentAlbum/CurrentAlbumViewModel.kt:59
- * : albumId column references a foreign key but it is not part of an index.
- * This may trigger full table scans whenever parent table is modified so you are highly advised to create an index that covers this column.
- * */

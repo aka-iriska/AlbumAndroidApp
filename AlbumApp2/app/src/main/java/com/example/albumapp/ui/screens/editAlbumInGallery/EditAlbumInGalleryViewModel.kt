@@ -43,7 +43,6 @@ class EditAlbumInGalleryViewModel(
 
 
     fun updateUiState(albumDetails: AlbumsUiState) {
-        Log.d("TAG", "updated +${albumsUiState}")
         albumsUiState = AlbumsUiState(
             id = albumDetails.id,
             title = albumDetails.title,
@@ -89,7 +88,6 @@ class EditAlbumInGalleryViewModel(
     }
 
     suspend fun updateAlbum(context: Context) {
-        Log.d("TAG", albumsUiState.toString())
         if (validateInput()) {
             /*if (albumsUiState.imageCover.isNotEmpty()) {
                 /**

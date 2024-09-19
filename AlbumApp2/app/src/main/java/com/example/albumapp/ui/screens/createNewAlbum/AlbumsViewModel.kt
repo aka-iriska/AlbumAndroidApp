@@ -28,7 +28,6 @@ class AlbumsViewModel(private val albumsRepository: AlbumsRepository) : ViewMode
      * a validation for input values.
      */
     fun updateUiState(albumDetails: AlbumsUiState) {
-        Log.d("TAG", "updated +${albumsUiState}")
         albumsUiState = AlbumsUiState(
             id = albumDetails.id,
             title = albumDetails.title,
@@ -79,7 +78,6 @@ class AlbumsViewModel(private val albumsRepository: AlbumsRepository) : ViewMode
     }
 
     suspend fun saveItem(context: Context) {
-        Log.d("TAG", albumsUiState.toString())
         if (validateInput() && saveTimeOfSaving()) {
             //albumsRepository.deleteAllAlbums()
             /**
@@ -113,7 +111,15 @@ class AlbumsViewModel(private val albumsRepository: AlbumsRepository) : ViewMode
             albumsRepository.insertAlbumDetails(
                 AlbumDetailed(
                     id = 0, albumId = insertedId.toInt(),
-                    countPages = 0
+                    type = "",
+                    offsetX = 0f,
+                    offsetY = 0f,
+                    scale = 0f,
+                    rotation = 0f,
+                    resourceId = 0,
+                    text = "",
+                    zIndex = 0,
+                    pageNumber = 0
                 )
             )
         }
@@ -122,8 +128,8 @@ class AlbumsViewModel(private val albumsRepository: AlbumsRepository) : ViewMode
     }
 
     suspend fun deleteAlbum(id: Int) {
-        var selectedAlbum:Album? = albumsRepository.getAlbumStream(id).first()
-        if (selectedAlbum!=null) {
+        var selectedAlbum: Album? = albumsRepository.getAlbumStream(id).first()
+        if (selectedAlbum != null) {
             albumsRepository.deleteAlbum(selectedAlbum)
         }
     }
@@ -165,7 +171,8 @@ fun AlbumsUiState.toAlbumDbClass(): Album = Album(
     dateOfActivity = dateOfActivity,
     endDateOfActivity = endDateOfActivity
 )
-fun Album.toAlbumsUiState():AlbumsUiState = AlbumsUiState(
+
+fun Album.toAlbumsUiState(): AlbumsUiState = AlbumsUiState(
     id = id,
     title = title,
     artist = artist,
