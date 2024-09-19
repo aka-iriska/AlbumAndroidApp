@@ -4,6 +4,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -85,7 +86,7 @@ fun MinimalDialog(
                 ) {
                     if (elementDate != "") {
                         val text: String =
-                            if (elementEndDate != "") elementDate + " - " + elementEndDate else elementDate
+                            if (elementEndDate != "") "$elementDate - $elementEndDate" else elementDate
                         Text(
                             text = text,
                             fontWeight = FontWeight.Bold,
@@ -121,7 +122,8 @@ fun MinimalDialog(
                             deleteClick = { openSureDelete.value = !openSureDelete.value },
                             onDismissRequest = { openEditingButton.value = false })
                         if (openSureDelete.value) {
-                            SureChoice(color = additionalColor,
+                            SureChoice(
+                                color = additionalColor,
                                 onYesClick = {
                                     coroutineScope.launch {
                                         albumsViewModel.deleteAlbum(
@@ -129,7 +131,9 @@ fun MinimalDialog(
                                         )
                                     }
                                 },
-                                cancelClick = { openSureDelete.value = !openSureDelete.value })
+                                onNoClick = { openSureDelete.value = !openSureDelete.value },
+                                text = "Are you sure to delete the album?\nYou won't have an ability to recover it."
+                            )
                         }
                     }
                 }
@@ -166,24 +170,27 @@ fun EditingMenu(
 }
 
 @Composable
-fun SureChoice(color: Color, onYesClick: () -> Unit, cancelClick: () -> Unit) {
+fun SureChoice(
+    color: Color, onYesClick: () -> Unit, onNoClick: () -> Unit, onCancelClick: () -> Unit = {},
+    text: String
+) {
     Column(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.SpaceBetween,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text("Are you sure to delete the album?", textAlign = TextAlign.Center, color = color)
-        Text(
-            "You won't have an ability to recover it.",
-            textAlign = TextAlign.Center,
-            color = color
-        )
+        Text(text, textAlign = TextAlign.Center, color = color)
         Row() {
             TextButton(onClick = onYesClick) {
                 Text(stringResource(R.string.yes))
             }
-            TextButton(onClick = cancelClick) {
+            TextButton(onClick = onNoClick) {
                 Text(stringResource(R.string.no))
+            }
+            if (onCancelClick != {}) {
+                TextButton(onClick = onCancelClick) {
+                    Text(stringResource(R.string.cancel))
+                }
             }
         }
     }
