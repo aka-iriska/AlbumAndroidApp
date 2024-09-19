@@ -290,7 +290,7 @@ fun StickerAlbumPage() {
 ```kotlin
 import java.lang.reflect.Modifier
 
-var scale by remember { mutableStateOf(0f) }
+var offset by remember { mutableStateOf(0f) }
 var rotation by remember { mutableStateOf(0f) }
 var scale by remember { mutableStateOf(0f) }
 Box(
