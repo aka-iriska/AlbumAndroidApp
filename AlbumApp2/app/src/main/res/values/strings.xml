@@ -16,5 +16,6 @@
     <string name="no">No</string>
     <string name="edit_album_main_info">Edit</string>
     <string name="create_new_pages_in_album">Pages in album</string>
+    <string name="cancel">Cancel</string>
 
 </resources>
