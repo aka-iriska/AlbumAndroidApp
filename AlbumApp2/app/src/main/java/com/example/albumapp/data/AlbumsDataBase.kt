@@ -7,7 +7,7 @@ import androidx.room.RoomDatabase
 import com.example.albumapp.ui.screens.createNewAlbum.Album
 import com.example.albumapp.ui.screens.currentAlbum.AlbumDetailed
 
-@Database(entities = [Album::class, AlbumDetailed::class], version = 5, exportSchema = false)
+@Database(entities = [Album::class, AlbumDetailed::class], version = 6, exportSchema = false)
 abstract class AlbumsDataBase: RoomDatabase() {
     abstract fun albumsDao(): AlbumsDAO
     // allows access to the methods to create or get the database and uses the class name as the qualifier.

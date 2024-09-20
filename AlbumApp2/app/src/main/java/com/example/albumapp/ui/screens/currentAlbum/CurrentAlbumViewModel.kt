@@ -58,6 +58,8 @@ data class AlbumDetailed(
     val type: String,
     val offsetX: Float,
     val offsetY: Float,
+    val originalWidth: Float,
+    val originalHeight: Float,
     val scale: Float,
     val rotation: Float,
     val resourceId: Int, // для стикеров и изображений
@@ -85,12 +87,14 @@ fun CurrentAlbumUiState.toAlbumDetailedDbClass(pageNumber: Int, element: PageEle
     resourceId = element.resourceId, // для стикеров и изображений
     text = element.text, // для текстовых полей
     zIndex = element.zIndex,
+    originalWidth = element.originalWidth,
+    originalHeight = element.originalHeight,
     pageNumber = pageNumber
 )
 
 data class PageElement(
     val id: Int = UUID.randomUUID().hashCode(), // Генерация уникального ID
-    val type: ElementType = ElementType.STICKER,
+    val type: ElementType = ElementType.DEFAULT,
     val offsetX: Float = 0f,
     val offsetY: Float = 0f,
     val scale: Float = 1f,
@@ -98,10 +102,12 @@ data class PageElement(
     val resourceId: Int = 0, // для стикеров и изображений
     val text: String = "", // для текстовых полей
     val zIndex: Int = 0,          // Z-индекс для управления наложением элементов
-)
+    val originalWidth: Float = 0f,
+    val originalHeight: Float= 0f
+    )
 
 enum class ElementType {
-    STICKER, IMAGE, TEXT_FIELD
+    STICKER, IMAGE, TEXT_FIELD, DEFAULT
 }
 
 
@@ -123,6 +129,8 @@ fun albumDetailedListToUiState(
                         rotation = albumDetailed.rotation,
                         resourceId = albumDetailed.resourceId,
                         text = albumDetailed.text,
+                        originalHeight = albumDetailed.originalHeight,
+                        originalWidth = albumDetailed.originalHeight,
                         zIndex = albumDetailed.zIndex
                     )
                 }

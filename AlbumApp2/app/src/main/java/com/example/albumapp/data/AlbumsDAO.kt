@@ -45,6 +45,6 @@ interface AlbumsDAO {
     @Query("SELECT a.title FROM albumsTable a INNER JOIN albumDetailsTable ad ON a.id = ad.albumId WHERE albumId = :albumId")
     fun getAlbumTitleForDetailed(albumId:Int):Flow<String>
 
-    @Query("SELECT ad.id, ad.albumId, ad.pageNumber, ad.type,ad.offsetX,ad.offsetY,ad.scale,ad.rotation,ad.resourceId,ad.text,ad.zIndex from albumDetailsTable ad INNER JOIN albumsTable a ON a.id = ad.albumId WHERE albumId = :albumId ")
+    @Query("SELECT ad.id, ad.albumId, ad.pageNumber, ad.type,ad.offsetX,ad.offsetY,ad.scale,ad.rotation,ad.resourceId,ad.text,ad.zIndex, ad.originalHeight, ad.originalWidth from albumDetailsTable ad INNER JOIN albumsTable a ON a.id = ad.albumId WHERE albumId = :albumId ")
     fun getAlbumDetailsStreamViaForeignKey(albumId: Int): Flow<List<AlbumDetailed>>
 }
