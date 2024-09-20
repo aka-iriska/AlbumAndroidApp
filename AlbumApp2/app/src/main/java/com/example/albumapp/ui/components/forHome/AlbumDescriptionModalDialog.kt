@@ -103,8 +103,8 @@ fun MinimalDialog(
                             .fillMaxSize(),
                         textAlign = TextAlign.Center,
                     )
-                    Spacer(modifier = modifier.padding(dimensionResource(id = R.dimen.padding_from_edge)))
                     if (elementDesc != "") {
+                        Spacer(modifier = modifier.padding(dimensionResource(id = R.dimen.padding_from_edge)))
                         Text(
                             text = elementDesc,
                             modifier = Modifier
