@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.pdf.PdfDocument.Page
 import android.util.Log
 import androidx.activity.compose.BackHandler
+import androidx.appcompat.content.res.AppCompatResources
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -51,6 +52,7 @@ import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.vectordrawable.graphics.drawable.VectorDrawableCompat
 import coil.compose.AsyncImagePainter
 import coil.compose.rememberAsyncImagePainter
 import coil.decode.SvgDecoder
@@ -173,6 +175,7 @@ fun CreateNewPagesBody(
                 /*todo разобраться со scaling при flip экране*/
                 if (stickersPressed) {
                     items(stickersList) { stickerResId ->
+                        val (stickerOriginalWidth, stickerOriginalHeight) = getVectorDrawableSize(context, stickerResId)
                         SvgSticker(
                             stickerId = stickerResId,
                             context = context,
@@ -185,7 +188,9 @@ fun CreateNewPagesBody(
                                         offsetX = 0f / pageSize.height,
                                         scale = 1f / min(pageSize.width, pageSize.height),
                                         rotation = 0f,
-                                        resourceId = stickerResId
+                                        resourceId = stickerResId,
+                                        originalWidth = stickerOriginalWidth,
+                                        originalHeight = stickerOriginalHeight
                                     ),
                                     -1
                                 )
@@ -261,7 +266,10 @@ fun CreateNewPagesBody(
                     .shadow(10.dp, shape = RoundedCornerShape(8.dp)) // shadow с закруглением
                     .clip(RoundedCornerShape(8.dp)) // Clip для правильной тени
                     .background(MaterialTheme.colorScheme.surfaceContainerHighest)
-                    .onSizeChanged { newSize -> pageSize = newSize }
+                    .onSizeChanged { newSize ->
+                        pageSize = newSize
+                        Log.d("new size", "new size: $newSize,\n pageSize: $pageSize")
+                    }
 
             ) {
                 /*todo добавить padding от края, заходя за который стикер будет удаляться*/
@@ -285,29 +293,22 @@ fun CanvasBody(
 
 
     Box(
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier.fillMaxSize().padding(dimensionResource(R.dimen.padding_from_edge))
     ) {
         elements.forEach { content ->
-            var pageNumber = content.key
+            val pageNumber = content.key
             content.value.forEach { element ->
-                val stickerX = element.offsetX * pageSize.width
-                val stickerY = element.offsetY * pageSize.height
-                val stickerScale = element.scale * min(pageSize.width, pageSize.height)
                 when (element.type) {
                     ElementType.STICKER -> DraggableSticker(
                         pageNumber = pageNumber,
                         stickerId = element.resourceId,
                         context = LocalContext.current,
                         pageSize = pageSize,
-                        sticker = element.copy(
-                            offsetX = stickerX,
-                            offsetY = stickerY,
-                            scale = stickerScale
-                        ),
+                        sticker = element,
                         onStickerUpdate = onUpdate,
                         //onUpdateCheck = onUpdateCheck
                     )
-
+                    ElementType.DEFAULT ->{}
                     ElementType.IMAGE -> {}
                     ElementType.TEXT_FIELD -> {}
                 }
@@ -367,7 +368,12 @@ fun SvgSticker(
         modifier = modifier.clickable(onClick = onClick)
     )
 }
-
+fun getVectorDrawableSize(context: Context, drawableId: Int): Pair<Float, Float> {
+    val vectorDrawable = AppCompatResources.getDrawable(context, drawableId) as VectorDrawableCompat
+    val width = vectorDrawable.intrinsicWidth.toFloat()
+    val height = vectorDrawable.intrinsicHeight.toFloat()
+    return Pair(width, height)
+}
 fun Modifier.stickerChoice(): Modifier = this
     .size(50.dp) // Определите размеры для стикеров
     .padding(5.dp) // Добавьте отступы, если нужно

@@ -23,6 +23,7 @@ retrofit = "2.9.0"
 retrofit2KotlinxSerializationConverter = "1.0.0"
 uiTestJunit4Android = "1.6.8"
 uiTextGoogleFonts = "1.6.8"
+appcompatResources = "1.7.0"
 
 [libraries]
 accompanist-svg = { module = "com.google.accompanist:accompanist-svg", version.ref = "accompanistSvg" }
@@ -56,6 +57,7 @@ retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit
 retrofit2-kotlinx-serialization-converter = { module = "com.jakewharton.retrofit:retrofit2-kotlinx-serialization-converter", version.ref = "retrofit2KotlinxSerializationConverter" }
 androidx-ui-test-junit4-android = { group = "androidx.compose.ui", name = "ui-test-junit4-android", version.ref = "uiTestJunit4Android" }
 androidx-ui-text-google-fonts = { group = "androidx.compose.ui", name = "ui-text-google-fonts", version.ref = "uiTextGoogleFonts" }
+androidx-appcompat-resources = { group = "androidx.appcompat", name = "appcompat-resources", version.ref = "appcompatResources" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
