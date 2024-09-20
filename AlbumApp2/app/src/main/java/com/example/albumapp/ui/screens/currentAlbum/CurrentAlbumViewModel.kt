@@ -43,6 +43,7 @@ class CurrentAlbumViewModel(
         return albumsRepository.getAlbumTitleForDetailed(albumId)
     }
 }
+const val BASE_SIZE = 1024f
 
 @Entity(
     tableName = "albumDetailsTable", foreignKeys = [ForeignKey(

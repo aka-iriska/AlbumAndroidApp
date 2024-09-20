@@ -27,6 +27,7 @@ import coil.compose.AsyncImagePainter
 import coil.compose.rememberAsyncImagePainter
 import coil.decode.SvgDecoder
 import coil.request.ImageRequest
+import com.example.albumapp.ui.screens.currentAlbum.BASE_SIZE
 import com.example.albumapp.ui.screens.currentAlbum.PageElement
 import kotlin.math.min
 
@@ -60,8 +61,7 @@ val newScale = Math.min(scaleWidth, scaleHeight) * originalScale
     var rotation by remember { mutableFloatStateOf(sticker.rotation) } // для вращения
     var scale by remember {
         mutableFloatStateOf(
-            (pageSize.width / sticker.originalWidth).coerceAtMost(pageSize.height / sticker.originalHeight) * sticker.scale
-
+            sticker.scale * min(pageSize.width, pageSize.height)// BASE_SIZE
 //                    sticker.scale * min(
 //                pageSize.width,
 //                pageSize.height
@@ -72,9 +72,7 @@ val newScale = Math.min(scaleWidth, scaleHeight) * originalScale
     LaunchedEffect(pageSize) {
         position = Offset(sticker.offsetX * pageSize.width, sticker.offsetY * pageSize.height)
         rotation = sticker.rotation
-        scale = sticker.scale * min(pageSize.width / sticker.originalWidth, pageSize.height / sticker.originalHeight)
-
-            //scale = sticker.scale * min(pageSize.width, pageSize.height)
+        scale = sticker.scale * min(pageSize.width, pageSize.height)// BASE_SIZE
     }
     /*todo backstack to cancel changes*/
 
@@ -86,7 +84,8 @@ val newScale = Math.min(scaleWidth, scaleHeight) * originalScale
                     position.y.toInt()
                 )
             } // используем Offset для позиционирования
-            .size((100.dp * scale)) // Явно задаем размер с учетом масштаба
+            .size((scale).dp)
+            //.size(100.dp * scale) // Явно задаем размер с учетом масштаба
             .transformable(
                 state = rememberTransformableState { zoomChange, offsetChange, rotationChange ->
                     scale *= zoomChange
@@ -99,7 +98,10 @@ val newScale = Math.min(scaleWidth, scaleHeight) * originalScale
                         sticker.copy(
                             offsetX = position.x / pageSize.width,
                             offsetY = position.y / pageSize.height,
-                            scale = scale / min(pageSize.width, pageSize.height), // Можете также сохранить оригинальный масштаб
+                            scale = scale / min(
+                                pageSize.width,
+                                pageSize.height
+                            ), // Можете также сохранить оригинальный масштаб
                             //scale = scale / min(pageSize.width, pageSize.height),
                             rotation = rotation
                         ),
@@ -108,10 +110,13 @@ val newScale = Math.min(scaleWidth, scaleHeight) * originalScale
                 }
             )
     ) {
-        Log.d("new size for sticker",
+        Log.d(
+            "new size for sticker",
             "x: ${position.x}\n y:${position.y}\n scale:$scale" +
-                    "\n x:${sticker.offsetX*100}\n y:${sticker.offsetY*100}" +
-                    "\n scale:${sticker.scale*100}\nscaleWidth:${sticker.scale*pageSize.width}\nscaleHeight${sticker.scale*pageSize.height}")
+                    "\n STICKER scale IN PER CENT:${sticker.scale * 100}\nscaleWidth:${sticker.scale * pageSize.width}\nscaleHeight${sticker.scale * pageSize.height}" +
+                    "\n sticker size: ${(pageSize.width * sticker.scale).dp}" +
+                    "\n pageWidth: ${pageSize.width}"
+        )
         // Получаем идентификатор ресурса по имени файла (без расширения)
         val painter = rememberAsyncImagePainter(
             model = ImageRequest.Builder(context)
@@ -129,8 +134,8 @@ val newScale = Math.min(scaleWidth, scaleHeight) * originalScale
             modifier = Modifier
                 .fillMaxSize()
                 .graphicsLayer {
-                    scaleX = scale
-                    scaleY = scale
+                    scaleX = scale/pageSize.width
+                    scaleY = scale/pageSize.width
                     rotationZ = rotation
                 }
         )

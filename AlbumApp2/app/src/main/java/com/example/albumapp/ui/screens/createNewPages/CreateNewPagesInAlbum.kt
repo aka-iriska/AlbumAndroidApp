@@ -175,22 +175,21 @@ fun CreateNewPagesBody(
                 /*todo разобраться со scaling при flip экране*/
                 if (stickersPressed) {
                     items(stickersList) { stickerResId ->
-                        val (stickerOriginalWidth, stickerOriginalHeight) = getVectorDrawableSize(context, stickerResId)
                         SvgSticker(
                             stickerId = stickerResId,
                             context = context,
                             onClick = {
-                                onUpdate(
+                                 onUpdate(
                                     pageNumber,
                                     PageElement(
                                         type = ElementType.STICKER,
                                         offsetY = 0f / pageSize.width,
                                         offsetX = 0f / pageSize.height,
-                                        scale = 1f / min(pageSize.width, pageSize.height),
+                                        scale = 0.3f,// / min(pageSize.width, pageSize.height),
                                         rotation = 0f,
                                         resourceId = stickerResId,
-                                        originalWidth = stickerOriginalWidth,
-                                        originalHeight = stickerOriginalHeight
+                                        originalWidth = 0f,
+                                        originalHeight = 0f
                                     ),
                                     -1
                                 )
@@ -369,6 +368,7 @@ fun SvgSticker(
     )
 }
 fun getVectorDrawableSize(context: Context, drawableId: Int): Pair<Float, Float> {
+    Log.d("tag", drawableId.toString())
     val vectorDrawable = AppCompatResources.getDrawable(context, drawableId) as VectorDrawableCompat
     val width = vectorDrawable.intrinsicWidth.toFloat()
     val height = vectorDrawable.intrinsicHeight.toFloat()
