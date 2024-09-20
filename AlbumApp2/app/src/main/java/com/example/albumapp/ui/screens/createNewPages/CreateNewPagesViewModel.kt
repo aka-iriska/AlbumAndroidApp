@@ -41,6 +41,7 @@ class CreateNewPagesViewModel(
     }
 
     fun updateUiState(pageNumber: Int, element: PageElement, elementId: Int = -1) {
+        /*todo разобраться с pageNumber */
         var newPagesMap = pagesUiState.pagesMap.toMutableMap()
         // Получаем список элементов для страницы или создаем новый пустой список, если его нет
         val newPageElementsList = newPagesMap[pageNumber]?.toMutableList() ?: mutableListOf()
@@ -64,8 +65,8 @@ class CreateNewPagesViewModel(
         // Обновляем состояние pagesUiState
         pagesUiState = pagesUiState.copy(pagesMap = newPagesMap, changed = true)
         /////////// для логов
-        pagesUiState.pagesMap.mapValues { element ->
-            element.value.forEach { sticker ->
+        pagesUiState.pagesMap.mapValues { content ->
+            content.value.forEach { sticker ->
                 Log.d(
                     "every sticker",
                     "sticker id: ${sticker.id}\n resource: ${sticker.resourceId}\n elementId: ${elementId}"

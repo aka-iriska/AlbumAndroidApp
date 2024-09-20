@@ -1,5 +1,6 @@
 package com.example.albumapp.ui.screens.currentAlbum
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -64,6 +65,7 @@ fun CurrentAlbum(
             )
         }
     ) { innerpadding ->
+        BackHandler { navigateBack() }
         LaunchedEffect(uiState.value.albumId) {
             albumTitle =
                 albumViewModel.findTitle(uiState.value.albumId)
@@ -87,6 +89,7 @@ fun CurrentAlbumBody(
     onEditClick: (Int) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
+    /*todo сделать отображение страниц*/
     var edittingButtonShown = remember { mutableStateOf(true) }
     Box(
         modifier = modifier
@@ -100,6 +103,7 @@ fun CurrentAlbumBody(
                 dimensionResource(id = R.dimen.padding_from_edge)
             )
         ) {
+            /*todo придумать как ещё сказать oops, flag ??*/
             if (albumUiState.pagesMap.isEmpty()) {
                 Column(
                     modifier = Modifier.fillMaxSize(),

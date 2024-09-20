@@ -7,6 +7,7 @@ import androidx.activity.compose.BackHandler
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -46,6 +47,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.dimensionResource
@@ -91,17 +93,24 @@ fun CreateNewPages(
     val coroutineScope = rememberCoroutineScope()
     Scaffold(topBar = {
         AppTopBar(title = "New pages in album", navigateBack = {
-            openAlertDialog.value = true
+            if (albumUiState.changed) {
+                openAlertDialog.value = true
+            } else {
+                navigateBack(albumUiState.albumId)
+            }
         })
     }) { innerPadding ->
-        BackHandler { openAlertDialog.value = !openAlertDialog.value }
+
+        BackHandler { if (albumUiState.changed) {
+            openAlertDialog.value = !openAlertDialog.value
+        } else {
+            navigateBack(albumUiState.albumId)
+        } }
         when {
             openAlertDialog.value -> {
                 SaveChangesModal(
                     saveChanges = {
                         coroutineScope.launch {
-                            /*todo create saving to bd and only then redirect to prev screen
-                            *  add success or not*/
                             albumViewModel.savePagesForAlbum()
                             openAlertDialog.value = false
                             navigateBack(albumUiState.albumId)
@@ -113,6 +122,7 @@ fun CreateNewPages(
                         navigateBack(albumUiState.albumId)
                     })
             }
+
         }
 
         CreateNewPagesBody(
@@ -172,24 +182,21 @@ fun CreateNewPagesBody(
                         }
                     }
                 }
-                /*todo разобраться со scaling при flip экране*/
                 if (stickersPressed) {
                     items(stickersList) { stickerResId ->
                         SvgSticker(
                             stickerId = stickerResId,
                             context = context,
                             onClick = {
-                                 onUpdate(
+                                onUpdate(
                                     pageNumber,
                                     PageElement(
                                         type = ElementType.STICKER,
                                         offsetY = 0f / pageSize.width,
                                         offsetX = 0f / pageSize.height,
-                                        scale = 0.3f,// / min(pageSize.width, pageSize.height),
+                                        scale = 0.1f,// / min(pageSize.width, pageSize.height),
                                         rotation = 0f,
-                                        resourceId = stickerResId,
-                                        originalWidth = 0f,
-                                        originalHeight = 0f
+                                        resourceId = stickerResId
                                     ),
                                     -1
                                 )
@@ -265,17 +272,21 @@ fun CreateNewPagesBody(
                     .shadow(10.dp, shape = RoundedCornerShape(8.dp)) // shadow с закруглением
                     .clip(RoundedCornerShape(8.dp)) // Clip для правильной тени
                     .background(MaterialTheme.colorScheme.surfaceContainerHighest)
-                    .onSizeChanged { newSize ->
-                        pageSize = newSize
-                        Log.d("new size", "new size: $newSize,\n pageSize: $pageSize")
-                    }
+
 
             ) {
                 /*todo добавить padding от края, заходя за который стикер будет удаляться*/
                 CanvasBody(
                     pageSize = pageSize,
-                    addedElements,
-                    onUpdate = onUpdate
+                    elements = addedElements,
+                    onUpdate = onUpdate,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(dimensionResource(R.dimen.padding_from_edge))
+                        .onSizeChanged { newSize ->
+                            pageSize = newSize
+                            Log.d("new size", "new size: $newSize,\n pageSize: $pageSize")
+                        }
                 )
             }
         }
@@ -286,13 +297,11 @@ fun CreateNewPagesBody(
 fun CanvasBody(
     pageSize: IntSize,
     elements: Map<Int, List<PageElement>> = emptyMap(),
-    //onUpdateCheck: (Int, PageElement) -> Unit,
-    onUpdate: (Int, PageElement, Int) -> Unit
+    onUpdate: (Int, PageElement, Int) -> Unit,
+    modifier: Modifier = Modifier
 ) {
-
-
     Box(
-        modifier = Modifier.fillMaxSize().padding(dimensionResource(R.dimen.padding_from_edge))
+        modifier = modifier
     ) {
         elements.forEach { content ->
             val pageNumber = content.key
@@ -305,9 +314,9 @@ fun CanvasBody(
                         pageSize = pageSize,
                         sticker = element,
                         onStickerUpdate = onUpdate,
-                        //onUpdateCheck = onUpdateCheck
                     )
-                    ElementType.DEFAULT ->{}
+
+                    ElementType.DEFAULT -> {}
                     ElementType.IMAGE -> {}
                     ElementType.TEXT_FIELD -> {}
                 }
@@ -367,6 +376,7 @@ fun SvgSticker(
         modifier = modifier.clickable(onClick = onClick)
     )
 }
+
 fun getVectorDrawableSize(context: Context, drawableId: Int): Pair<Float, Float> {
     Log.d("tag", drawableId.toString())
     val vectorDrawable = AppCompatResources.getDrawable(context, drawableId) as VectorDrawableCompat
@@ -374,6 +384,7 @@ fun getVectorDrawableSize(context: Context, drawableId: Int): Pair<Float, Float>
     val height = vectorDrawable.intrinsicHeight.toFloat()
     return Pair(width, height)
 }
+
 fun Modifier.stickerChoice(): Modifier = this
     .size(50.dp) // Определите размеры для стикеров
     .padding(5.dp) // Добавьте отступы, если нужно
