@@ -119,8 +119,6 @@ class AlbumsViewModel(private val albumsRepository: AlbumsRepository) : ViewMode
                     resourceId = 0,
                     text = "",
                     zIndex = 0,
-                    originalHeight = 0f,
-                    originalWidth = 0f,
                     pageNumber = 0
                 )
             )

@@ -3,6 +3,7 @@ package com.example.albumapp.ui.components.forNewPage
 import android.content.Context
 import android.util.Log
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.rememberTransformableState
 import androidx.compose.foundation.gestures.transformable
 import androidx.compose.foundation.layout.Box
@@ -18,6 +19,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.IntOffset
@@ -27,7 +29,6 @@ import coil.compose.AsyncImagePainter
 import coil.compose.rememberAsyncImagePainter
 import coil.decode.SvgDecoder
 import coil.request.ImageRequest
-import com.example.albumapp.ui.screens.currentAlbum.BASE_SIZE
 import com.example.albumapp.ui.screens.currentAlbum.PageElement
 import kotlin.math.min
 
@@ -40,16 +41,7 @@ fun DraggableSticker(
     pageSize: IntSize,
     sticker: PageElement,
     onStickerUpdate: (Int, PageElement, Int) -> Unit,
-    //onUpdateCheck:(Int, PageElement)->Unit
 ) {
-    /*
-    * val scaleWidth = pageWidth / originalWidth
-val scaleHeight = pageHeight / originalHeight
-
-// Используем минимальное значение для масштабирования
-val newScale = Math.min(scaleWidth, scaleHeight) * originalScale
-    *
-    * */
     var position by remember {
         mutableStateOf(
             Offset(
@@ -61,18 +53,14 @@ val newScale = Math.min(scaleWidth, scaleHeight) * originalScale
     var rotation by remember { mutableFloatStateOf(sticker.rotation) } // для вращения
     var scale by remember {
         mutableFloatStateOf(
-            sticker.scale * min(pageSize.width, pageSize.height)// BASE_SIZE
-//                    sticker.scale * min(
-//                pageSize.width,
-//                pageSize.height
-//            )
+            sticker.scale * min(pageSize.width, pageSize.height)
         )
     } // для увеличения
 
     LaunchedEffect(pageSize) {
         position = Offset(sticker.offsetX * pageSize.width, sticker.offsetY * pageSize.height)
         rotation = sticker.rotation
-        scale = sticker.scale * min(pageSize.width, pageSize.height)// BASE_SIZE
+        scale = sticker.scale * min(pageSize.width, pageSize.height)
     }
     /*todo backstack to cancel changes*/
 
@@ -83,15 +71,13 @@ val newScale = Math.min(scaleWidth, scaleHeight) * originalScale
                     position.x.toInt(),
                     position.y.toInt()
                 )
-            } // используем Offset для позиционирования
+            }
             .size((scale).dp)
-            //.size(100.dp * scale) // Явно задаем размер с учетом масштаба
             .transformable(
                 state = rememberTransformableState { zoomChange, offsetChange, rotationChange ->
                     scale *= zoomChange
                     rotation += rotationChange
                     position += offsetChange
-                    //onUpdateCheck()
                     // Обновляем стикер при изменении его параметров
                     onStickerUpdate(
                         pageNumber,
@@ -101,8 +87,7 @@ val newScale = Math.min(scaleWidth, scaleHeight) * originalScale
                             scale = scale / min(
                                 pageSize.width,
                                 pageSize.height
-                            ), // Можете также сохранить оригинальный масштаб
-                            //scale = scale / min(pageSize.width, pageSize.height),
+                            ),
                             rotation = rotation
                         ),
                         sticker.id
@@ -134,8 +119,8 @@ val newScale = Math.min(scaleWidth, scaleHeight) * originalScale
             modifier = Modifier
                 .fillMaxSize()
                 .graphicsLayer {
-                    scaleX = scale/pageSize.width
-                    scaleY = scale/pageSize.width
+                    scaleX = 1f//scale/pageSize.width
+                    scaleY = 1f//scale/pageSize.width
                     rotationZ = rotation
                 }
         )

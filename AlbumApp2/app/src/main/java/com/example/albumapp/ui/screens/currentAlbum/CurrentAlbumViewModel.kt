@@ -43,7 +43,6 @@ class CurrentAlbumViewModel(
         return albumsRepository.getAlbumTitleForDetailed(albumId)
     }
 }
-const val BASE_SIZE = 1024f
 
 @Entity(
     tableName = "albumDetailsTable", foreignKeys = [ForeignKey(
@@ -59,8 +58,6 @@ data class AlbumDetailed(
     val type: String,
     val offsetX: Float,
     val offsetY: Float,
-    val originalWidth: Float,
-    val originalHeight: Float,
     val scale: Float,
     val rotation: Float,
     val resourceId: Int, // для стикеров и изображений
@@ -88,8 +85,6 @@ fun CurrentAlbumUiState.toAlbumDetailedDbClass(pageNumber: Int, element: PageEle
     resourceId = element.resourceId, // для стикеров и изображений
     text = element.text, // для текстовых полей
     zIndex = element.zIndex,
-    originalWidth = element.originalWidth,
-    originalHeight = element.originalHeight,
     pageNumber = pageNumber
 )
 
@@ -130,8 +125,6 @@ fun albumDetailedListToUiState(
                         rotation = albumDetailed.rotation,
                         resourceId = albumDetailed.resourceId,
                         text = albumDetailed.text,
-                        originalHeight = albumDetailed.originalHeight,
-                        originalWidth = albumDetailed.originalHeight,
                         zIndex = albumDetailed.zIndex
                     )
                 }
