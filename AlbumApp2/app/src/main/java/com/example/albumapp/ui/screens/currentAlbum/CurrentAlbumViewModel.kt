@@ -1,6 +1,9 @@
 package com.example.albumapp.ui.screens.currentAlbum
 
 import android.util.Log
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -14,26 +17,27 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import java.util.UUID
 
 class CurrentAlbumViewModel(
     savedStateHandle: SavedStateHandle, private val albumsRepository: AlbumsRepository
 ) : ViewModel() {
-
-
+    var pagesUiState by mutableStateOf(CurrentAlbumUiState())
+        private set
     private val albumId: Int = checkNotNull(savedStateHandle[CurrentAlbumDestination.AlbumIdArg])
-    val uiState: StateFlow<CurrentAlbumUiState> =
-        albumsRepository
-            .getAlbumDetailsStreamViaForeignKey(albumId)
-            .filterNotNull()
-            .map { sth ->
-                //Log.d("data", sth.toString())
-                albumDetailedListToUiState(sth)
-            }.stateIn(
-                scope = viewModelScope,
-                started = SharingStarted.WhileSubscribed(TIMEOUT_MILLIS),
-                initialValue = CurrentAlbumUiState()
-            )
+
+    init {
+        viewModelScope.launch {
+            albumsRepository
+                .getAlbumDetailsStreamViaForeignKey(albumId)
+                .filterNotNull()
+                .collect { albumDetails ->
+                    pagesUiState = albumDetailedListToUiState(albumDetails, isEditing = false)
+                }
+
+        }
+    }
 
     companion object {
         private const val TIMEOUT_MILLIS = 5_000L
@@ -71,10 +75,14 @@ data class CurrentAlbumUiState(
     val currentPage: Int = 1,
     val pagesMap: Map<Int, List<PageElement>> = emptyMap(),
     val isEditing: Boolean = false,
-    val changed:Boolean = false
+    val changed: Boolean = false
 
 )
-fun CurrentAlbumUiState.toAlbumDetailedDbClass(pageNumber: Int, element: PageElement): AlbumDetailed = AlbumDetailed(
+
+fun CurrentAlbumUiState.toAlbumDetailedDbClass(
+    pageNumber: Int,
+    element: PageElement
+): AlbumDetailed = AlbumDetailed(
     id = element.id,
     albumId = this.albumId,
     type = element.type.toString(),
@@ -99,14 +107,12 @@ data class PageElement(
     val text: String = "", // для текстовых полей
     val zIndex: Int = 0,          // Z-индекс для управления наложением элементов
     val originalWidth: Float = 0f,
-    val originalHeight: Float= 0f
-    )
+    val originalHeight: Float = 0f
+)
 
 enum class ElementType {
     STICKER, IMAGE, TEXT_FIELD, DEFAULT
 }
-
-
 
 
 fun albumDetailedListToUiState(

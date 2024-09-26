@@ -2,6 +2,7 @@ package com.example.albumapp.ui.screens.createNewPages
 
 import android.content.Context
 import android.graphics.pdf.PdfDocument.Page
+import android.graphics.pdf.PdfDocument.PageInfo
 import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.appcompat.content.res.AppCompatResources
@@ -20,7 +21,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.Favorite
@@ -28,6 +32,7 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconToggleButton
@@ -51,8 +56,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.dimensionResource
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.vectordrawable.graphics.drawable.VectorDrawableCompat
 import coil.compose.AsyncImagePainter
@@ -61,6 +68,7 @@ import coil.decode.SvgDecoder
 import coil.request.ImageRequest
 import com.example.albumapp.R
 import com.example.albumapp.data.AppViewModelProvider
+import com.example.albumapp.ui.components.forHome.SureChoice
 import com.example.albumapp.ui.components.forNewPage.DraggableSticker
 import com.example.albumapp.ui.components.forNewPage.SaveChangesModal
 import com.example.albumapp.ui.navigation.AppTopBar
@@ -83,8 +91,7 @@ fun CreateNewPages(
     modifier: Modifier = Modifier,
     navigateBack: (Int) -> Unit = {},
     albumViewModel: CreateNewPagesViewModel = viewModel(factory = AppViewModelProvider.Factory),
-
-    ) {
+) {
     val albumUiState = albumViewModel.pagesUiState
     val context = LocalContext.current
     val stickersList =
@@ -101,11 +108,13 @@ fun CreateNewPages(
         })
     }) { innerPadding ->
 
-        BackHandler { if (albumUiState.changed) {
-            openAlertDialog.value = !openAlertDialog.value
-        } else {
-            navigateBack(albumUiState.albumId)
-        } }
+        BackHandler {
+            if (albumUiState.changed) {
+                openAlertDialog.value = !openAlertDialog.value
+            } else {
+                navigateBack(albumUiState.albumId)
+            }
+        }
         when {
             openAlertDialog.value -> {
                 SaveChangesModal(
@@ -127,11 +136,12 @@ fun CreateNewPages(
 
         CreateNewPagesBody(
             stickersList = stickersList,
-
             context = context,
             modifier = modifier.padding(innerPadding),
             onUpdate = albumViewModel::updateUiState,
-            addedElements = albumUiState.pagesMap
+            addedElements = albumUiState.pagesMap,
+            onDelete = albumViewModel::deleteElement,
+            onCancelDelete = albumViewModel::cancelDeleteElement
         )
     }
 }
@@ -142,7 +152,9 @@ fun CreateNewPagesBody(
     context: Context,
     modifier: Modifier = Modifier,
     onUpdate: (Int, PageElement, Int) -> Unit,
-    addedElements: Map<Int, List<PageElement>>
+    addedElements: Map<Int, List<PageElement>>,
+    onDelete: (Int, Int) -> Unit,
+    onCancelDelete: (Int, Int, Int, Int, IntSize) -> Unit
 ) {
     var stickersPressed by remember { mutableStateOf(false) }
     var settingsPressed by remember { mutableStateOf(false) }
@@ -265,6 +277,8 @@ fun CreateNewPagesBody(
         Column(
             modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.Center
         ) {
+            var isNearEdge by remember { mutableStateOf(false) } // Для подсветки всей `Column`
+            var paddingSizeForPage = (min(pageSize.height, pageSize.width) / 22).dp
             Column(
                 modifier = Modifier
                     .aspectRatio(2f / 3f)
@@ -282,11 +296,19 @@ fun CreateNewPagesBody(
                     onUpdate = onUpdate,
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(dimensionResource(R.dimen.padding_from_edge))
+                        .border(
+                            width = paddingSizeForPage,
+                            color = if (isNearEdge) Color.Red.copy(alpha = 0.3f) else Color.Unspecified,
+                            shape = RoundedCornerShape(8.dp)
+                        ) /*todo зависимость от nearedge*/ // Подсветка границы `Column`
+                        .padding(paddingSizeForPage)
                         .onSizeChanged { newSize ->
                             pageSize = newSize
                             Log.d("new size", "new size: $newSize,\n pageSize: $pageSize")
-                        }
+                        },
+                    comeToTheEdge = { isNearEdge = it },
+                    onElementRemove = onDelete,
+                    onCancelDelete = onCancelDelete
                 )
             }
         }
@@ -298,8 +320,14 @@ fun CanvasBody(
     pageSize: IntSize,
     elements: Map<Int, List<PageElement>> = emptyMap(),
     onUpdate: (Int, PageElement, Int) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onElementRemove: (Int, Int) -> Unit,
+    comeToTheEdge: (Boolean) -> Unit,
+    onCancelDelete: (Int, Int, Int, Int, IntSize) -> Unit,
 ) {
+    var elementToRemove by remember { mutableStateOf<Pair<Int, Int>?>(null) } // Текущий элемент для удаления
+    val additionalColor: Color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+    var elementSize by remember { mutableStateOf<IntSize>(IntSize.Zero) }
     Box(
         modifier = modifier
     ) {
@@ -314,11 +342,68 @@ fun CanvasBody(
                         pageSize = pageSize,
                         sticker = element,
                         onStickerUpdate = onUpdate,
+                        onNear = { comeToTheEdge(it) },
+                        onDelete = {
+                            elementToRemove = Pair(pageNumber, element.id)
+                            elementSize = it
+                        }
                     )
-
                     ElementType.DEFAULT -> {}
                     ElementType.IMAGE -> {}
                     ElementType.TEXT_FIELD -> {}
+                }
+            }
+
+        }
+    }
+    elementToRemove?.let {
+        Dialog(onDismissRequest = {
+            comeToTheEdge(false)
+            elementToRemove = null
+        }) {
+            ElevatedCard(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                shape = MaterialTheme.shapes.medium,
+            ) {
+                Box(
+                    modifier = Modifier.clip(MaterialTheme.shapes.medium)
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .padding(dimensionResource(id = R.dimen.padding_from_edge))
+                            .verticalScroll(rememberScrollState()),
+                        verticalArrangement = Arrangement.SpaceAround
+                    ) {
+                        SureChoice(
+                            color = additionalColor,
+                            onYesClick =
+                            {
+                                onElementRemove(
+                                    elementToRemove!!.first,
+                                    elementToRemove!!.second
+                                )  // Удаление элемента
+                                comeToTheEdge(false)
+                                elementToRemove = null
+
+                            },
+                            onCancelClick = {},
+                            onNoClick = {
+                                onCancelDelete(
+                                    elementToRemove!!.first,
+                                    elementToRemove!!.second,
+                                    pageSize.width,
+                                    pageSize.height,
+                                    elementSize
+                                )
+                                comeToTheEdge(false)
+                                elementToRemove = null
+                            },
+                            text = "Do you want to delete element?",
+                        )
+
+                    }
                 }
             }
 

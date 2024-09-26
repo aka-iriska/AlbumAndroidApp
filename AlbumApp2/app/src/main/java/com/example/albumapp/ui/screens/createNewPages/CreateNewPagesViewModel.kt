@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.unit.IntSize
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -14,6 +15,7 @@ import com.example.albumapp.ui.screens.currentAlbum.albumDetailedListToUiState
 import com.example.albumapp.ui.screens.currentAlbum.toAlbumDetailedDbClass
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.launch
+import okhttp3.internal.toImmutableList
 
 class CreateNewPagesViewModel(
     savedStateHandle: SavedStateHandle, private val albumsRepository: AlbumsRepository
@@ -30,7 +32,8 @@ class CreateNewPagesViewModel(
                 .filterNotNull()
                 .collect { albumDetails ->
                     pagesUiState = albumDetailedListToUiState(albumDetails, isEditing = true)
-                    elementIdCounter += pagesUiState.pagesMap.values.flatten().maxOfOrNull { it.id }!!
+                    elementIdCounter += pagesUiState.pagesMap.values.flatten()
+                        .maxOfOrNull { it.id }!!
                 }
         }
     }
@@ -72,6 +75,48 @@ class CreateNewPagesViewModel(
                     "sticker id: ${sticker.id}\n resource: ${sticker.resourceId}\n elementId: ${elementId}"
                 )
             }
+        }
+
+    }
+
+    fun deleteElement(pageNumber: Int, elementId: Int) {
+        // Получаем текущий список элементов на странице с номером pageNumber
+        val currentPageElements = pagesUiState.pagesMap[pageNumber]?.toMutableList()
+
+        // Если страница найдена и содержит элементы
+        currentPageElements?.let {
+            // Удаляем элемент с указанным elementId
+            val updatedElements = it.filterNot { element -> element.id == elementId }
+
+            // Обновляем карту страниц с измененным списком элементов
+            pagesUiState = pagesUiState.copy(
+                pagesMap = pagesUiState.pagesMap.toMutableMap().apply {
+                    this[pageNumber] = updatedElements
+                }
+            )
+        }
+    }
+
+    fun cancelDeleteElement(pageNumber: Int, elementId: Int, pageWidth:Int,  pageHeight:Int, stickerSize: IntSize) {
+        val currentPageElements = pagesUiState.pagesMap[pageNumber]?.toMutableList()
+
+        // Если страница найдена и содержит элементы
+        currentPageElements?.forEachIndexed { index, pageElement ->
+            if (pageElement.id == elementId) {
+                val newPositionX = pageElement.offsetX.coerceAtLeast(0f).coerceAtMost((pageWidth-stickerSize.width)/pageWidth.toFloat())
+                val newPositionY = pageElement.offsetY.coerceAtLeast(0f).coerceAtMost((pageHeight-stickerSize.height)/pageHeight.toFloat())
+                currentPageElements[index] =
+                    pageElement.copy(offsetY = newPositionY, offsetX = newPositionX)
+                return@forEachIndexed
+            }
+        }
+        currentPageElements?.let {
+            Log.d("upd", "new list:$currentPageElements")
+            val updatesPageElements: List<PageElement> = currentPageElements.toImmutableList()
+            pagesUiState = pagesUiState.copy(
+                pagesMap = pagesUiState.pagesMap.toMutableMap().apply {
+                    this[pageNumber] = updatesPageElements
+                })
         }
 
     }

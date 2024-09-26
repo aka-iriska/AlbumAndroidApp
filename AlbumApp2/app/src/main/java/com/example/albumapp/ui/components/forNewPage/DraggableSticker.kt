@@ -21,7 +21,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
@@ -41,7 +44,10 @@ fun DraggableSticker(
     pageSize: IntSize,
     sticker: PageElement,
     onStickerUpdate: (Int, PageElement, Int) -> Unit,
+    onDelete: (IntSize) -> Unit,
+    onNear: (Boolean) -> Unit
 ) {
+    /*todo вывести формулы расчёта в отдельную функцию*/
     var position by remember {
         mutableStateOf(
             Offset(
@@ -53,14 +59,15 @@ fun DraggableSticker(
     var rotation by remember { mutableFloatStateOf(sticker.rotation) } // для вращения
     var scale by remember {
         mutableFloatStateOf(
-            sticker.scale * min(pageSize.width, pageSize.height)
+            sticker.scale * pageSize.width
         )
     } // для увеличения
+    var stickerSize by remember { mutableStateOf(IntSize.Zero) } // Размер стикера
 
-    LaunchedEffect(pageSize) {
+    LaunchedEffect(pageSize, sticker.offsetX, sticker.offsetY) {
         position = Offset(sticker.offsetX * pageSize.width, sticker.offsetY * pageSize.height)
         rotation = sticker.rotation
-        scale = sticker.scale * min(pageSize.width, pageSize.height)
+        scale = sticker.scale * pageSize.width
     }
     /*todo backstack to cancel changes*/
 
@@ -84,24 +91,31 @@ fun DraggableSticker(
                         sticker.copy(
                             offsetX = position.x / pageSize.width,
                             offsetY = position.y / pageSize.height,
-                            scale = scale / min(
+                            scale = scale /
                                 pageSize.width,
-                                pageSize.height
-                            ),
                             rotation = rotation
                         ),
                         sticker.id
                     )
+                    val centerX = position.x + stickerSize.width / 2
+                    val centerY = position.y + stickerSize.height / 2
+                    // Проверяем, находится ли стикер за пределами padding
+                    if (centerX - stickerSize.width / 4 < 0 || centerY - stickerSize.height / 4 < 0 ||
+                        centerX + stickerSize.width / 4 >= pageSize.width ||
+                        centerY + stickerSize.height / 4 >= pageSize.height
+                    ) {
+                        onNear(true)
+                    } else onNear(false)
+                    // Вычисляем центр стикера
+                    if (centerX - stickerSize.width / 5 < 0 || centerY - stickerSize.height / 5 < 0 ||
+                        centerX + stickerSize.width / 5 >= pageSize.width ||
+                        centerY + stickerSize.height / 5 >= pageSize.height
+                    ) {
+                        onDelete(stickerSize) // Вызываем onDelete, если стикер попадает в padding
+                    }
                 }
             )
     ) {
-        Log.d(
-            "new size for sticker",
-            "x: ${position.x}\n y:${position.y}\n scale:$scale" +
-                    "\n STICKER scale IN PER CENT:${sticker.scale * 100}\nscaleWidth:${sticker.scale * pageSize.width}\nscaleHeight${sticker.scale * pageSize.height}" +
-                    "\n sticker size: ${(pageSize.width * sticker.scale).dp}" +
-                    "\n pageWidth: ${pageSize.width}"
-        )
         // Получаем идентификатор ресурса по имени файла (без расширения)
         val painter = rememberAsyncImagePainter(
             model = ImageRequest.Builder(context)
@@ -118,6 +132,9 @@ fun DraggableSticker(
             contentDescription = "Sticker",
             modifier = Modifier
                 .fillMaxSize()
+                .onSizeChanged { size ->
+                    stickerSize = size // Запоминаем фактический размер стикера
+                }
                 .graphicsLayer {
                     scaleX = 1f//scale/pageSize.width
                     scaleY = 1f//scale/pageSize.width
