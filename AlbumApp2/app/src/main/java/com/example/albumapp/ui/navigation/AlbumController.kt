@@ -101,9 +101,10 @@ fun AppTopBar(
     title: String,
     scrollBehavior: TopAppBarScrollBehavior? = null,
     navigateBack: () -> Unit = {},
-    canNavigateBack: Boolean = true
+    canNavigateBack: Boolean = true,
+    modifier: Modifier = Modifier
 ) {
-    Surface(shadowElevation = 10.dp) {
+    Surface(shadowElevation = 10.dp, modifier = modifier) {
         CenterAlignedTopAppBar(
             title = {
                 Text(

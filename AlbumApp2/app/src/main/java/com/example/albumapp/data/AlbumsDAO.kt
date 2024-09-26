@@ -32,7 +32,7 @@ interface AlbumsDAO {
     @Query("SELECT * from albumDetailsTable WHERE id = :albumId")
     fun getAlbumDetails(albumId: Int): Flow<AlbumDetailed?>
 
-    @Query("SELECT * from albumsTable ORDER BY title ASC")
+    @Query("SELECT * from albumsTable ORDER BY dateOfCreation ASC")
     fun getAllAlbums(): Flow<List<Album>>
     @Query("SELECT * from albumDetailsTable ORDER BY id ASC")
     fun getAllAlbumsDetailed(): Flow<List<AlbumDetailed>>
