@@ -56,6 +56,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -127,7 +128,7 @@ fun EnterAlbumDetails(
     onSaveClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var ContainerColor = MaterialTheme.colorScheme.secondaryContainer
+    val containerColor = MaterialTheme.colorScheme.primaryContainer
 
     /**
      * For Image Picker
@@ -161,7 +162,7 @@ fun EnterAlbumDetails(
                     .border(
                         shape = MaterialTheme.shapes.medium,
                         width = 2.dp,
-                        color = ContainerColor
+                        color = containerColor
                     )
                     .clickable { picker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) }
             ) {
@@ -191,7 +192,7 @@ fun EnterAlbumDetails(
                             Icons.Rounded.Delete,
                             contentDescription = "Remove Image",
                             //modifier = modifier.border(width = 1.dp, color = MaterialTheme.colorScheme.onSecondaryContainer ),
-                            tint = ContainerColor
+                            tint = containerColor
                         )
                     }
                 } else {
@@ -232,11 +233,11 @@ fun EnterAlbumDetails(
 
                 shape = MaterialTheme.shapes.medium,
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedContainerColor = ContainerColor,
-                    unfocusedContainerColor = ContainerColor,
-                    disabledContainerColor = ContainerColor,
-                    focusedBorderColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                    unfocusedBorderColor = MaterialTheme.colorScheme.onSecondaryContainer
+                    focusedContainerColor = containerColor,
+                    unfocusedContainerColor = containerColor,
+                    disabledContainerColor = containerColor,
+                    focusedBorderColor = containerColor,
+                    unfocusedBorderColor = containerColor
                 ),
                 singleLine = true
             )
@@ -255,11 +256,11 @@ fun EnterAlbumDetails(
 
                 shape = MaterialTheme.shapes.medium,
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedContainerColor = ContainerColor,
-                    unfocusedContainerColor = ContainerColor,
-                    disabledContainerColor = ContainerColor,
-                    focusedBorderColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                    unfocusedBorderColor = MaterialTheme.colorScheme.onSecondaryContainer
+                    focusedContainerColor = containerColor,
+                    unfocusedContainerColor = containerColor,
+                    disabledContainerColor = containerColor,
+                    focusedBorderColor = containerColor,
+                    unfocusedBorderColor = containerColor
                 ),
                 singleLine = false
             )
@@ -270,8 +271,8 @@ fun EnterAlbumDetails(
          */
         item {
             DateTimePicker(
-            albumUiState = albumUiState,
-            onItemValueChange = onItemValueChange
+                albumUiState = albumUiState,
+                onItemValueChange = onItemValueChange
             )
         }
         item { MySpacer() }
@@ -284,7 +285,7 @@ fun EnterAlbumDetails(
                 onClick =
                 onSaveClick,
                 colors = ButtonDefaults.outlinedButtonColors(
-                    containerColor = ContainerColor,
+                    containerColor = containerColor,
                     contentColor = MaterialTheme.colorScheme.onSecondaryContainer
                 )
             ) {
@@ -295,6 +296,7 @@ fun EnterAlbumDetails(
 
 
 }
+
 /*TODO make end date later than start date*/
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -347,24 +349,27 @@ fun DateTimePicker(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Text(
-                text = greyTextTitle,
-                textAlign = TextAlign.Start,
-                modifier = Modifier.clickable(onClick = {
+            TextButton(
+                onClick = {
                     chooseEndOfEvent = !chooseEndOfEvent
-                }),
-                color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.6f)
-            )
-            Text(
-                text = stringResource(R.string.clear_date_time),
-                textAlign = TextAlign.End,
-                modifier = Modifier
-                    .clickable(onClick = {
-                        selectedDate = null
-                        chooseEndOfEvent = false
-                    }),
-                color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.6f)
-            )
+                })
+            {
+                Text(
+                    text = greyTextTitle,
+                )
+            }
+            TextButton(
+                onClick = {
+                    onItemValueChange(albumUiState.copy(dateOfActivity = ""))
+                    selectedDate = null
+                    chooseEndOfEvent = false
+                },
+                )
+            {
+                Text(
+                    text = stringResource(R.string.clear_date_time),
+                )
+            }
         }
 
     }
@@ -396,17 +401,16 @@ fun DateTimePicker(
 
         MySpacer()
         if (selectedEndDateText != "") {
-
-            Text(
-                text = stringResource(R.string.clear_date_time),
-                textAlign = TextAlign.End,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable(onClick = {
-                        selectedEndDate = null
-                    }),
-                color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.6f)
-            )
+            TextButton(
+                onClick = {
+                    onItemValueChange(albumUiState.copy(endDateOfActivity = ""))
+                    selectedEndDate = null
+                },
+            ) {
+                Text(
+                    text = stringResource(R.string.clear_date_time),
+                )
+            }
         }
 
     }
@@ -444,11 +448,11 @@ fun TextFieldForDates(
 
         shape = MaterialTheme.shapes.medium,
         colors = OutlinedTextFieldDefaults.colors(
-            focusedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
-            unfocusedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
-            disabledContainerColor = MaterialTheme.colorScheme.secondaryContainer,
-            focusedBorderColor = MaterialTheme.colorScheme.onSecondaryContainer,
-            unfocusedBorderColor = MaterialTheme.colorScheme.onSecondaryContainer
+            focusedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+            unfocusedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+            disabledContainerColor = MaterialTheme.colorScheme.primaryContainer,
+            focusedBorderColor = MaterialTheme.colorScheme.primaryContainer,
+            unfocusedBorderColor = MaterialTheme.colorScheme.primaryContainer
         ),
         singleLine = true
     )
