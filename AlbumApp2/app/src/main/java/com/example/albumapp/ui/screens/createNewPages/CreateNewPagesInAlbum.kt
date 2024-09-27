@@ -3,7 +3,6 @@ package com.example.albumapp.ui.screens.createNewPages
 import android.content.Context
 import android.util.Log
 import androidx.activity.compose.BackHandler
-import androidx.appcompat.content.res.AppCompatResources
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -23,15 +22,12 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AddCircle
-import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.outlined.Add
-import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconToggleButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -50,11 +46,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.dimensionResource
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.vectordrawable.graphics.drawable.VectorDrawableCompat
 import coil.compose.AsyncImagePainter
 import coil.compose.rememberAsyncImagePainter
 import coil.decode.SvgDecoder
@@ -151,15 +147,17 @@ fun CreateNewPagesBody(
 ) {
     var stickersPressed by remember { mutableStateOf(false) }
     var settingsPressed by remember { mutableStateOf(false) }
-    var addImagePressed by remember { mutableStateOf(false) }
     var pageNumber by remember { mutableIntStateOf(0) }
-    //val addedElements = remember { mutableStateListOf<PageElement>() }
     var pageSize by remember { mutableStateOf(IntSize.Zero) }
 
     Column(modifier = modifier.fillMaxSize()) {
+
+        /**
+         * Icons for adding photos, stickers, textFields, newPages, changing orientation
+         */
+
         Column(
             modifier = Modifier.fillMaxWidth()
-            //.background(MaterialTheme.colorScheme.surfaceContainerLow)
         ) {
             LazyRow(
                 modifier = Modifier
@@ -169,18 +167,22 @@ fun CreateNewPagesBody(
                 verticalAlignment = Alignment.CenterVertically
             ) {
 
+                /**
+                 * for stickers
+                 */
+
                 item {
                     IconToggleButton(checked = stickersPressed,
                         onCheckedChange = { stickersPressed = it }) {
                         if (stickersPressed) {
                             Icon(
-                                Icons.Filled.Favorite,
+                                painterResource(R.drawable.heart_minus),
                                 contentDescription = "Show Stickers",
                                 modifier = Modifier.stickerChoice()
                             )
                         } else {
                             Icon(
-                                Icons.Outlined.FavoriteBorder,
+                                painterResource(R.drawable.heart_plus),
                                 contentDescription = "Add Stickers",
                                 modifier = Modifier.stickerChoice()
                             )
@@ -209,25 +211,39 @@ fun CreateNewPagesBody(
                             modifier = Modifier.stickerChoice()
                         )
                     }
-                }/*todo add adding images*/
+                }
+
+                /**
+                 * for images
+                 */
+
+                /*todo add adding images*/
                 item {
-                    IconToggleButton(checked = addImagePressed,
-                        onCheckedChange = { addImagePressed = it }) {
-                        if (addImagePressed) {
-                            Icon(
-                                Icons.Filled.AddCircle,
-                                contentDescription = "Choose Image",
-                                modifier = Modifier.stickerChoice()
-                            )
-                        } else {
-                            Icon(
-                                Icons.Outlined.Add,
-                                contentDescription = "Add image",
-                                modifier = Modifier.stickerChoice()
-                            )
-                        }
+                    IconButton(onClick = {}) {
+                        Icon(
+                            painterResource(R.drawable.add_photo),
+                            modifier = Modifier.stickerChoice(),
+                            contentDescription = ""
+                        )
                     }
                 }
+
+                /**
+                 * for text fields
+                 */
+                item {
+                    IconButton(onClick = {}) {
+                        Icon(
+                            painterResource(R.drawable.add_text_fields2),
+                            modifier = Modifier.stickerChoice(),
+                            contentDescription = ""
+                        )
+                    }
+                }
+                /**
+                 * for settings: changing orientation of page, count of showed ones
+                 */
+
                 item {
                     IconToggleButton(checked = settingsPressed,
                         onCheckedChange = { settingsPressed = it }) {
@@ -245,33 +261,35 @@ fun CreateNewPagesBody(
                             )
                         }
                     }
-                }/*todo add adding new pages*/
+                }
+
+                /**
+                 * for adding new pages in Album
+                 */
+
+                /*todo add adding new pages*/
                 item {
-                    IconToggleButton(checked = addImagePressed,
-                        onCheckedChange = { addImagePressed = it }) {
-                        if (addImagePressed) {
-                            Icon(
-                                Icons.Filled.AddCircle,
-                                contentDescription = "Choose Image",
-                                modifier = Modifier.stickerChoice()
-                            )
-                        } else {
-                            Icon(
-                                Icons.Outlined.Add,
-                                contentDescription = "Add image",
-                                modifier = Modifier.stickerChoice()
-                            )
-                        }
+                    IconButton(onClick = {}) {
+                        Icon(
+                            painterResource(R.drawable.new_page),
+                            modifier = Modifier.stickerChoice(),
+                            contentDescription = ""
+                        )
                     }
                 }
 
             }
         }
+
+        /**
+         * part for viewing [CanvasBody]
+         */
+
         Column(
             modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.Center
         ) {
             var isNearEdge by remember { mutableStateOf(false) } // Для подсветки всей `Column`
-            var paddingSizeForPage = (min(pageSize.height, pageSize.width) / 22).dp
+            val paddingSizeForPage = (min(pageSize.height, pageSize.width) / 22).dp
             Column(
                 modifier = Modifier
                     .aspectRatio(2f / 3f)
@@ -282,7 +300,6 @@ fun CreateNewPagesBody(
 
 
             ) {
-                /*todo добавить padding от края, заходя за который стикер будет удаляться*/
                 CanvasBody(
                     pageSize = pageSize,
                     elements = addedElements,
@@ -293,7 +310,7 @@ fun CreateNewPagesBody(
                             width = paddingSizeForPage,
                             color = if (isNearEdge) Color.Red.copy(alpha = 0.3f) else Color.Unspecified,
                             shape = RoundedCornerShape(8.dp)
-                        ) /*todo зависимость от nearedge*/ // Подсветка границы `Column`
+                        )
                         .padding(paddingSizeForPage)
                         .onSizeChanged { newSize ->
                             pageSize = newSize
@@ -310,17 +327,17 @@ fun CreateNewPagesBody(
 
 @Composable
 fun CanvasBody(
+    modifier: Modifier = Modifier,
     pageSize: IntSize,
     elements: Map<Int, List<PageElement>> = emptyMap(),
     onUpdate: (Int, PageElement, Int) -> Unit,
-    modifier: Modifier = Modifier,
     onElementRemove: (Int, Int) -> Unit,
     comeToTheEdge: (Boolean) -> Unit,
     onCancelDelete: (Int, Int, Int, Int, IntSize) -> Unit,
 ) {
     var elementToRemove by remember { mutableStateOf<Pair<Int, Int>?>(null) } // Текущий элемент для удаления
     val additionalColor: Color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-    var elementSize by remember { mutableStateOf<IntSize>(IntSize.Zero) }
+    var elementSize by remember { mutableStateOf(IntSize.Zero) }
     Box(
         modifier = modifier
     ) {
@@ -341,6 +358,7 @@ fun CanvasBody(
                             elementSize = it
                         }
                     )
+
                     ElementType.DEFAULT -> {}
                     ElementType.IMAGE -> {}
                     ElementType.TEXT_FIELD -> {}
@@ -404,36 +422,6 @@ fun CanvasBody(
     }
 }
 
-//@Composable
-//fun EditablePage(elements: List<PageElement> = emptyList(), onUpdate: (PageElement) -> Unit = {}) {
-//    Box(modifier = Modifier.fillMaxSize()) {
-//        elements.forEach { element ->
-//            when (element.type) {
-//                ElementType.STICKER -> DraggableSticker(
-//                    stickerId = element.resourceId!!,
-//                    context = LocalContext.current,
-//                    pageSize = IntSize(300, 500),
-//                    sticker = element,
-//                    onStickerUpdate = onUpdate
-//                )
-//
-//                ElementType.IMAGE -> DraggableImage(
-//                    imageId = element.resourceId!!,
-//                    context = LocalContext.current,
-//                    element = element,
-//                    onElementUpdate = onUpdate
-//                )
-//
-//                ElementType.TEXT_FIELD -> DraggableTextField(
-//                    text = element.text.orEmpty(),
-//                    element = element,
-//                    onTextUpdate = onUpdate
-//                )
-//            }
-//        }
-//    }
-//}
-
 @Composable
 fun SvgSticker(
     stickerId: Int, onClick: () -> Unit, context: Context, modifier: Modifier = Modifier
@@ -453,14 +441,6 @@ fun SvgSticker(
         contentDescription = "Sticker",
         modifier = modifier.clickable(onClick = onClick)
     )
-}
-
-fun getVectorDrawableSize(context: Context, drawableId: Int): Pair<Float, Float> {
-    Log.d("tag", drawableId.toString())
-    val vectorDrawable = AppCompatResources.getDrawable(context, drawableId) as VectorDrawableCompat
-    val width = vectorDrawable.intrinsicWidth.toFloat()
-    val height = vectorDrawable.intrinsicHeight.toFloat()
-    return Pair(width, height)
 }
 
 fun Modifier.stickerChoice(): Modifier = this
