@@ -3,25 +3,39 @@ package com.example.albumapp.ui.screens.home
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.ArrowDropDown
+import androidx.compose.material.icons.rounded.Settings
+import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.albumapp.R
 import com.example.albumapp.data.AppViewModelProvider
@@ -36,13 +50,14 @@ object HomeDestination : NavigationDestination {
     override val route = "home"
     override val titleRes = R.string.home_screen_title
 }
+
 enum class SortOptions(
     val sortOptionName: String
 ) {
-    CREATE("dateOfCreation"),
-    BEGIN_DATE("dateOfActivity"),
-    END_DATE("endDateOfActivity"),
-    TITLE("title")
+    CREATE("Album date of creation"),
+    BEGIN_DATE("Date of event"),
+    END_DATE("End date of event"),
+    TITLE("Title")
 }
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
@@ -57,62 +72,95 @@ fun HomeScreen(
 
     val homeUiState = viewModel.homeUiState
     val coroutineScope = rememberCoroutineScope()
-    var openSortOptions:Boolean by remember { mutableStateOf(false) }
-    var dropSortMenu:Boolean by remember {mutableStateOf(false)}
-    var finalChoice
-//    var expanded by rememberSaveable {
-//        mutableStateOf<Boolean>(true)
-//    }
-//    var buttonImage: ImageVector = if (expanded) Icons.Rounded.KeyboardArrowDown else
-//        Icons.Rounded.KeyboardArrowUp
+    var openSortOptions: Boolean by remember { mutableStateOf(false) }
+    var dropSortMenu: Boolean by remember { mutableStateOf(false) }
+    var finalChoice: SortOptions by rememberSaveable { mutableStateOf(SortOptions.CREATE) }
     Scaffold(topBar = {
-        AppTopBar(title = stringResource(id = HomeDestination.titleRes), canNavigateBack = false, modifier = Modifier.clickable { openSortOptions = !openSortOptions })
+        AppTopBar(
+            title = stringResource(id = HomeDestination.titleRes),
+            canNavigateBack = false,
+            modifier = Modifier.clickable { openSortOptions = !openSortOptions })
     }) { innerpadding ->
-
-
         Column(
             modifier = modifier
                 .fillMaxSize()
                 .padding(innerpadding)
         ) {
-            Row(modifier = Modifier.fillMaxWidth()){
-                Text("Sort by: ")
-                DropdownMenu(
-                    expanded = dropSortMenu,
-                    onDismissRequest = { dropSortMenu = false },
-//                    modifier = Modifier
-//                        .width(with(LocalDensity.current){mTextFieldSize.width.toDp()})
+            if (openSortOptions) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceAround,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    SortOptions.entries.forEach { sortOptionClear ->
-                        DropdownMenuItem(
-                            onClick = {
-                            mSelectedText = label
-                                dropSortMenu = false
-                        }) {
-                            Text(text = label)
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text("Sort by:", fontSize = 15.sp)
+                        Row {
+                            TextButton(
+                                onClick = {
+                                    dropSortMenu = !dropSortMenu
+                                },
+                                colors = ButtonColors(
+                                    containerColor = Color.Unspecified,
+                                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                                    disabledContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                                    disabledContainerColor = Color.Unspecified
+                                )
+                            ) {
+                                Text(
+                                    text = finalChoice.sortOptionName,
+                                    fontWeight = FontWeight.ExtraBold,
+                                    fontSize = 15.sp,
+
+                                )
+                                Icon(
+                                    Icons.Rounded.ArrowDropDown,
+                                    contentDescription = "open sort options"
+                                )
+                            }
+                            DropdownMenu(
+                                expanded = dropSortMenu,
+                                onDismissRequest = { dropSortMenu = false },
+                            ) {
+                                SortOptions.entries.forEach { sortOptionClear ->
+                                    DropdownMenuItem(
+                                        text = {
+                                            Text(
+                                                text = sortOptionClear.sortOptionName,
+                                                fontSize = 15.sp
+                                            )
+                                        },
+                                        onClick = {
+                                            finalChoice = sortOptionClear
+                                            dropSortMenu = false
+                                        }
+                                    )
+                                }
+                            }
+                        }
+                    }
+                    Row(
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        /*todo for future account*/
+                        /*IconButton(onClick = {}) {
+                            Icon(
+                                Icons.Rounded.AccountCircle,
+                                "view account screen"
+                            )
+                        }*/
+                        IconButton(onClick = {}) {
+                            Icon(
+                                Icons.Rounded.Settings,
+                                "view settings screen"
+                            )
                         }
                     }
                 }
-
-                /*
-                DropdownMenu(
-            expanded = mExpanded,
-            onDismissRequest = { mExpanded = false },
-            modifier = Modifier
-                .width(with(LocalDensity.current){mTextFieldSize.width.toDp()})
-        ) {
-            mCities.forEach { label ->
-                DropdownMenuItem(onClick = {
-                    mSelectedText = label
-                    mExpanded = false
-                }) {
-                    Text(text = label)
-                }
             }
-        }
-                * */
-            }
-            viewModel.sortAlbumsListByChoice(sortOption = SortOptions.BEGIN_DATE)
+            viewModel.sortAlbumsListByChoice(sortOption = finalChoice)
             HomeScreenPadding(
                 onEditClick = onEditClick,
                 onAlbumClick = onAlbumClick,
@@ -122,58 +170,6 @@ fun HomeScreen(
             )
         }
     }
-
-//    Column(
-//        modifier = modifier
-//            .fillMaxSize()
-//            .padding(dimensionResource(id = R.dimen.padding_from_edge)),
-//        verticalArrangement = Arrangement.Bottom,
-//        horizontalAlignment = Alignment.End
-//    ) {
-//        if (expanded) {
-//            Column() {
-//                ColouredButtonWithIcon(
-//                    //modifier = modifier,
-//                    onClick = onAddButtonClick,
-//                    buttonImage = Icons.Rounded.Add,
-//                    contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
-//                    containerColor = MaterialTheme.colorScheme.tertiaryContainer,
-//                    contentDescription = "Add new album button"
-//                )
-//                ColouredButtonWithIcon(
-//                    //modifier = modifier,
-//                    onClick = { /*TODO*/ },
-//                    buttonImage = Icons.Rounded.AccountCircle,
-//                    contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
-//                    containerColor = MaterialTheme.colorScheme.tertiaryContainer,
-//                    contentDescription = "View Account Screen"
-//                )
-//                ColouredButtonWithIcon(
-//                    //modifier = modifier,
-//                    onClick = { /*TODO*/ },
-//                    buttonImage = Icons.Rounded.Settings,
-//                    contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
-//                    containerColor = MaterialTheme.colorScheme.tertiaryContainer,
-//                    contentDescription = "Settings Button"
-//                )
-//            }
-//        }
-//        Row(
-//            modifier = modifier
-//                .fillMaxWidth(),
-//            horizontalArrangement = Arrangement.End
-//        ) {
-//            ColouredButtonWithIcon(
-//                //modifier = modifier,
-//                onClick = { expanded = !expanded },
-//                buttonImage = buttonImage,
-//                contentColor = MaterialTheme.colorScheme.onTertiary,
-//                containerColor = MaterialTheme.colorScheme.tertiary,
-//                contentDescription = "Add button"
-//            )
-//
-//        }
-//    }
 }
 
 @Composable
