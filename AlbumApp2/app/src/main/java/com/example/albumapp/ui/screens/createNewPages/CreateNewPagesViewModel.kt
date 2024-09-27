@@ -97,14 +97,22 @@ class CreateNewPagesViewModel(
         }
     }
 
-    fun cancelDeleteElement(pageNumber: Int, elementId: Int, pageWidth:Int,  pageHeight:Int, stickerSize: IntSize) {
+    fun cancelDeleteElement(
+        pageNumber: Int,
+        elementId: Int,
+        pageWidth: Int,
+        pageHeight: Int,
+        stickerSize: IntSize
+    ) {
         val currentPageElements = pagesUiState.pagesMap[pageNumber]?.toMutableList()
 
         // Если страница найдена и содержит элементы
         currentPageElements?.forEachIndexed { index, pageElement ->
             if (pageElement.id == elementId) {
-                val newPositionX = pageElement.offsetX.coerceAtLeast(0f).coerceAtMost((pageWidth-stickerSize.width)/pageWidth.toFloat())
-                val newPositionY = pageElement.offsetY.coerceAtLeast(0f).coerceAtMost((pageHeight-stickerSize.height)/pageHeight.toFloat())
+                val newPositionX = pageElement.offsetX.coerceAtLeast(0f)
+                    .coerceAtMost((pageWidth - stickerSize.width) / pageWidth.toFloat())
+                val newPositionY = pageElement.offsetY.coerceAtLeast(0f)
+                    .coerceAtMost((pageHeight - stickerSize.height) / pageHeight.toFloat())
                 currentPageElements[index] =
                     pageElement.copy(offsetY = newPositionY, offsetX = newPositionX)
                 return@forEachIndexed

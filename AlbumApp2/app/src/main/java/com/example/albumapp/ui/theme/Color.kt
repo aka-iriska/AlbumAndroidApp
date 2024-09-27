@@ -1,4 +1,5 @@
 package com.example.albumapp.ui.theme
+
 import androidx.compose.ui.graphics.Color
 
 val primaryLight = Color(0xFF6D5E0F)

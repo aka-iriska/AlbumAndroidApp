@@ -244,6 +244,7 @@ private val highContrastDarkColorScheme = darkColorScheme(
     surfaceContainerHigh = surfaceContainerHighDarkHighContrast,
     surfaceContainerHighest = surfaceContainerHighestDarkHighContrast,
 )
+
 @Immutable
 data class ColorFamily(
     val color: Color,
@@ -255,6 +256,7 @@ data class ColorFamily(
 val unspecified_scheme = ColorFamily(
     Color.Unspecified, Color.Unspecified, Color.Unspecified, Color.Unspecified
 )
+
 @Composable
 fun AlbumAppTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
@@ -280,7 +282,7 @@ fun AlbumAppTheme(
         }
     }
 
-    MaterialTheme( 
+    MaterialTheme(
         colorScheme = colorScheme,
         shapes = Shapes,
         typography = AppTypography,

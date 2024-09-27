@@ -25,16 +25,26 @@ object AppViewModelProvider {
             HomeViewModel(inventoryApplication().container.albumsRepository)
         }
         initializer {
-            EditAlbumInGalleryViewModel(this.createSavedStateHandle(),inventoryApplication().container.albumsRepository)
+            EditAlbumInGalleryViewModel(
+                this.createSavedStateHandle(),
+                inventoryApplication().container.albumsRepository
+            )
         }
         initializer {
-            CurrentAlbumViewModel(this.createSavedStateHandle(),inventoryApplication().container.albumsRepository)
+            CurrentAlbumViewModel(
+                this.createSavedStateHandle(),
+                inventoryApplication().container.albumsRepository
+            )
         }
         initializer {
-            CreateNewPagesViewModel(this.createSavedStateHandle(), inventoryApplication().container.albumsRepository)
+            CreateNewPagesViewModel(
+                this.createSavedStateHandle(),
+                inventoryApplication().container.albumsRepository
+            )
         }
     }
 }
+
 /**
  * Extension function to queries for [Application] object and returns an instance of
  * [InventoryApplication].

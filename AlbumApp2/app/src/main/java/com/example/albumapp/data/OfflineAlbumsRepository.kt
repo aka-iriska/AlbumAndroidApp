@@ -32,6 +32,7 @@ class OfflineAlbumsRepository(private val albumDao: AlbumsDAO) : AlbumsRepositor
     override suspend fun getAlbumTitleForDetailed(albumId: Int): String {
         return albumDao.getAlbumTitleForDetailed(albumId).firstOrNull() ?: ""
     }
+
     override fun getAlbumDetailsStreamViaForeignKey(albumId: Int): Flow<List<AlbumDetailed>> =
-    albumDao.getAlbumDetailsStreamViaForeignKey(albumId)
+        albumDao.getAlbumDetailsStreamViaForeignKey(albumId)
 }

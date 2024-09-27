@@ -179,7 +179,7 @@ fun SureChoice(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(text, textAlign = TextAlign.Center, color = color)
-        Row() {
+        Row {
             TextButton(onClick = onYesClick) {
                 Text(stringResource(R.string.yes))
             }
@@ -199,7 +199,7 @@ fun SureChoice(
 @Preview(showBackground = true)
 @Composable
 fun ModalPreview() {
-    AlbumAppTheme() {
+    AlbumAppTheme {
         Surface(modifier = Modifier.fillMaxSize()) {
 
 //            MinimalDialog(

@@ -43,7 +43,7 @@ fun FrameForAlbum(
 @Preview(showBackground = true)
 @Composable
 fun FramePreview() {
-    AlbumAppTheme() {
+    AlbumAppTheme {
         Surface(modifier = Modifier.fillMaxSize()) {
 
             Card(

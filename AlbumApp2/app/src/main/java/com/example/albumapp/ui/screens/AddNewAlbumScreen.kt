@@ -76,7 +76,8 @@ fun AddAlbum(onHomeScreen: () -> Unit, modifier: Modifier = Modifier) {
                         .height(dimensionResource(id = R.dimen.height_for_button)),
                     colors = ButtonDefaults.elevatedButtonColors(
                         containerColor = Color.Transparent,
-                        contentColor = MaterialTheme.colorScheme.tertiary),
+                        contentColor = MaterialTheme.colorScheme.tertiary
+                    ),
 
                     //elevation = ButtonDefaults.elevatedButtonElevation(5.dp, ),
                     onClick = { picker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) })
@@ -96,12 +97,13 @@ fun AddAlbum(onHomeScreen: () -> Unit, modifier: Modifier = Modifier) {
     }
 
 }
-@Composable
-fun PickPhotoOrVideo(imageUri:Uri?){
 
+@Composable
+fun PickPhotoOrVideo(imageUri: Uri?) {
 
 
 }
+
 @Preview(showBackground = true)
 @Composable
 fun NewAlbumPreview() {

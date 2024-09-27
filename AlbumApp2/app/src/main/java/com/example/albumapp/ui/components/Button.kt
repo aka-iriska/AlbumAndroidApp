@@ -43,10 +43,11 @@ fun ColouredButtonWithIcon(
             .height(dimensionResource(id = R.dimen.height_for_button))
             .width(dimensionResource(id = R.dimen.height_for_button))
             .padding(3.dp),
-            //.shadow(30.dp, shape = RoundedCornerShape(50)),
+        //.shadow(30.dp, shape = RoundedCornerShape(50)),
         colors = ButtonDefaults.buttonColors(
             contentColor = contentColor,
-            containerColor = containerColor.copy(alpha = 0.5f)),
+            containerColor = containerColor.copy(alpha = 0.5f)
+        ),
         onClick = onClick,
         elevation = ButtonDefaults.elevatedButtonElevation(50.dp)
     ) {
@@ -58,8 +59,9 @@ fun ColouredButtonWithIcon(
         )
     }
 }
+
 @Composable
-fun ColouredCard(modifier:Modifier = Modifier, content:  @Composable() (ColumnScope.() -> Unit)){
+fun ColouredCard(modifier: Modifier = Modifier, content: @Composable() (ColumnScope.() -> Unit)) {
     Card(
         elevation = CardDefaults.cardElevation(10.dp),
         shape = RectangleShape,
@@ -90,7 +92,8 @@ fun ButtonPreview() {
         }
     }
 }
+
 @Composable
-fun MySpacer(){
+fun MySpacer() {
     Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_from_edge)))
 }

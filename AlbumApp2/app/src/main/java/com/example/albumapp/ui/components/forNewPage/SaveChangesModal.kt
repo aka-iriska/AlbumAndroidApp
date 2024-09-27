@@ -49,8 +49,7 @@ fun SaveChangesModal(
                     SureChoice(
                         color = additionalColor,
                         onYesClick =
-                            saveChanges
-                        ,
+                        saveChanges,
                         onCancelClick = onDismissRequest,
                         onNoClick = onNavigateBack,
                         text = "Do you want to save changes?",

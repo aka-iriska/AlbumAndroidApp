@@ -7,10 +7,10 @@ import com.example.albumapp.ui.screens.currentAlbum.PageElement
 
 @Composable
 fun DraggableImage(
-    imageId:Int,
+    imageId: Int,
     context: Context = LocalContext.current,
     element: PageElement,
-    onElementUpdate:(PageElement)->Unit
-){
+    onElementUpdate: (PageElement) -> Unit
+) {
 
 }

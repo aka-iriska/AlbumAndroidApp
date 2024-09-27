@@ -5,6 +5,7 @@ import com.example.albumapp.ui.screens.currentAlbum.AlbumDetailed
 import kotlinx.coroutines.flow.Flow
 
 data class InsertResult(val id: Int)
+
 /**
  * Repository that provides insert, update, delete, and retrieve of [Item] from a given data source.
  */
@@ -13,10 +14,12 @@ interface AlbumsRepository {
      * Retrieve all the albums from the the given data source.
      */
     fun getAllAlbumsStream(): Flow<List<Album>>
+
     /**
      * Retrieve all the albums details from the the given data source.
      */
     fun getAllDetailedAlbumsStream(): Flow<List<AlbumDetailed>>
+
     /**
      * Retrieve an item from the given data source that matches with the [id].
      */
@@ -26,10 +29,11 @@ interface AlbumsRepository {
      * Retrieve album details for a given album ID.
      */
     fun getAlbumDetailsStream(albumId: Int): Flow<AlbumDetailed?>
+
     /**
      * Get the title of album for currentAlbumScreen via foreignkey albumId in albumDetailed and id in albumsTable
      */
-    suspend fun getAlbumTitleForDetailed(albumId:Int): String
+    suspend fun getAlbumTitleForDetailed(albumId: Int): String
 
     fun getAlbumDetailsStreamViaForeignKey(albumId: Int): Flow<List<AlbumDetailed>>
 
@@ -67,6 +71,7 @@ interface AlbumsRepository {
      * Delete all albums
      */
     suspend fun deleteAllAlbums()
+
     /**
      * Delete all albums details.
      */

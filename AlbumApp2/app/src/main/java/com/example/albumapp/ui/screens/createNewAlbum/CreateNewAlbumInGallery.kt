@@ -81,7 +81,7 @@ object CreateNewAlbumDestination : NavigationDestination {
     override val route = "create_new_album_in_gallery"
     override val titleRes = R.string.create_new_album_on_home_screen
     const val AlbumIdArg = "itemId"
-    val routeWithArgs = "${CreateNewAlbumDestination.route}/{$AlbumIdArg}"
+    val routeWithArgs = "$route/{$AlbumIdArg}"
 }
 
 /*TODO redo colors and to add date of activity*/
@@ -362,7 +362,7 @@ fun DateTimePicker(
                     selectedDate = null
                     chooseEndOfEvent = false
                 },
-                )
+            )
             {
                 Text(
                     text = stringResource(R.string.clear_date_time),

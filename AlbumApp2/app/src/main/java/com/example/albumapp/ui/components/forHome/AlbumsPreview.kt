@@ -44,7 +44,7 @@ import com.example.albumapp.ui.theme.AlbumAppTheme
 
 @Composable
 fun AlbumsOnHomeScreen(
-    onEditClick:(Int)->Unit,
+    onEditClick: (Int) -> Unit,
     onAlbumClick: (Int) -> Unit,
     albumList: List<Album> = emptyList(),
     onPlusButtonClick: () -> Unit,/*todo create the same float button*/
@@ -112,7 +112,12 @@ fun AlbumsCards(
 
         if (!albumList.isEmpty()) {
             items(albumList, key = { it.id }) { album ->
-                EveryAlbumCard(onEditClick = onEditClick, onAlbumClick = onAlbumClick, album, modifier)
+                EveryAlbumCard(
+                    onEditClick = onEditClick,
+                    onAlbumClick = onAlbumClick,
+                    album,
+                    modifier
+                )
             }
         }
     }
@@ -187,7 +192,7 @@ fun EveryAlbumCard(
                 onEditClick = {
                     onEditClick(it)
                     openAlertDialog.value = false
-                              },
+                },
                 onDismissRequest = { openAlertDialog.value = false },
                 elementId = albumElement.id,
                 elementTitle = albumElement.title,
@@ -204,7 +209,7 @@ fun EveryAlbumCard(
 @Preview(showBackground = true)
 @Composable
 fun AlbumsPreview() {
-    AlbumAppTheme() {
+    AlbumAppTheme {
         Surface(modifier = Modifier.fillMaxSize()) {
             AlbumsOnHomeScreen(
                 {},

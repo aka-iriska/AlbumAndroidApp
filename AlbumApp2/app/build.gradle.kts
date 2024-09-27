@@ -99,12 +99,14 @@ dependencies {
     // Kotlin serialization
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.androidx.ui.test.junit4.android)
+
     // for page curl
     //implementation (app.num.numandroidpagecurleffect:numandroidpagecurleffect:1.0)
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
     //
     implementation(libs.lifecycle.viewmodel.compose)
+
     // for back handler
     implementation("androidx.activity:activity:1.6.0-alpha05")
     androidTestImplementation(libs.androidx.junit)

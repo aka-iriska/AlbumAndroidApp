@@ -79,7 +79,7 @@ fun AlbumPresent(modifier: Modifier = Modifier) {
 @Preview(showBackground = true)
 @Composable
 fun AlbumPreview() {
-    AlbumAppTheme() {
+    AlbumAppTheme {
         AlbumPresent()
     }
 }

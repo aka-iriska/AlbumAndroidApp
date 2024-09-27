@@ -27,6 +27,7 @@ class EditAlbumInGalleryViewModel(
         private set
     private val albumId: Int =
         checkNotNull(savedStateHandle[EditAlbumInGalleryDestination.AlbumIdArg])
+
     init {
         viewModelScope.launch {
             albumsUiState = albumsRepository.getAlbumStream(albumId)
@@ -37,8 +38,6 @@ class EditAlbumInGalleryViewModel(
             //Log.d("Tag", "${albumsRepository.getAlbumStream(albumId) .filterNotNull().first().toAlbumsUiState()}")
         }
     }
-
-
 
 
     fun updateUiState(albumDetails: AlbumsUiState) {

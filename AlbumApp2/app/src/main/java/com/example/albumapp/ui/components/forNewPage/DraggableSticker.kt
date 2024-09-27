@@ -87,7 +87,7 @@ fun DraggableSticker(
                             offsetX = position.x / pageSize.width,
                             offsetY = position.y / pageSize.height,
                             scale = scale /
-                                pageSize.width,
+                                    pageSize.width,
                             rotation = rotation
                         ),
                         sticker.id
