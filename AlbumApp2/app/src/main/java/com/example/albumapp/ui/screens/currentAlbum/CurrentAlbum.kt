@@ -1,10 +1,8 @@
 package com.example.albumapp.ui.screens.currentAlbum
 
-import android.graphics.pdf.PdfDocument.Page
 import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -26,7 +24,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -37,7 +34,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.dimensionResource
@@ -49,12 +45,10 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.albumapp.R
 import com.example.albumapp.data.AppViewModelProvider
 import com.example.albumapp.ui.components.forCurrentAlbum.DisplayElement
-import com.example.albumapp.ui.components.forNewPage.DraggableSticker
 import com.example.albumapp.ui.navigation.AppTopBar
 import com.example.albumapp.ui.navigation.NavigationDestination
 import com.example.albumapp.ui.theme.AlbumAppTheme
 import kotlin.math.min
-import kotlin.math.round
 
 object CurrentAlbumDestination : NavigationDestination {
     override val route = "chosen_album"
