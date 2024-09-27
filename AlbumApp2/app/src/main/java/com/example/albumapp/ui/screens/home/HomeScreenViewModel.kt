@@ -7,6 +7,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.albumapp.data.AlbumsRepository
 import com.example.albumapp.ui.screens.createNewAlbum.Album
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
@@ -17,34 +21,32 @@ import kotlinx.coroutines.launch
  * ViewModel to retrieve all items in the Room database.
  */
 class HomeViewModel(albumsRepository: AlbumsRepository) : ViewModel() {
-    var homeUiState by mutableStateOf(HomeUiState())
-        private set
+    private val _sortOption = MutableStateFlow(SortOptions.CREATE)
 
-    init {
-        viewModelScope.launch {
-            homeUiState = albumsRepository.getAllAlbumsStream()
-                .map { sth ->
-                    HomeUiState(sth)
-                }
-                .filterNotNull()
-                .first()
-
-        }
-    }
+    var homeUiState: StateFlow<HomeUiState> =
+        combine(
+            albumsRepository.getAllAlbumsStream(),
+            _sortOption
+        ) { albums, sortOption ->
+            val sortedAlbums = when (sortOption) {
+                SortOptions.CREATE -> albums.sortedBy { it.dateOfCreation }
+                SortOptions.BEGIN_DATE -> albums.sortedBy { it.dateOfActivity }
+                SortOptions.END_DATE -> albums.sortedBy { it.endDateOfActivity }
+                SortOptions.TITLE -> albums.sortedBy { it.title }
+            }
+            HomeUiState(sortedAlbums)
+        }.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(TIMEOUT_MILLIS),
+            initialValue = HomeUiState()
+        )
 
     companion object {
         private const val TIMEOUT_MILLIS = 5_000L
     }
 
     fun sortAlbumsListByChoice(sortOption: SortOptions) {
-        var mutableAlbumList = homeUiState.albumList.toMutableList()
-        homeUiState = when (sortOption){
-            SortOptions.CREATE -> HomeUiState(albumList = homeUiState.albumList.sortedBy { it.dateOfCreation})
-            SortOptions.BEGIN_DATE -> HomeUiState(albumList = homeUiState.albumList.sortedBy { it.dateOfActivity})
-            SortOptions.END_DATE -> HomeUiState(albumList = homeUiState.albumList.sortedBy { it.endDateOfActivity})
-            SortOptions.TITLE -> HomeUiState(albumList = homeUiState.albumList.sortedBy { it.title})
-        }
-
+        _sortOption.value = sortOption
     }
 }
 

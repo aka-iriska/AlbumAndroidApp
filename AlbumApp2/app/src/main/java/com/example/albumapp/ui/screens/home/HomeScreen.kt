@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.rounded.ArrowDropDown
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material3.ButtonColors
@@ -23,6 +24,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -70,7 +72,7 @@ fun HomeScreen(
     viewModel: HomeViewModel = viewModel(factory = AppViewModelProvider.Factory),
 ) {
 
-    val homeUiState = viewModel.homeUiState
+    val homeUiState = viewModel.homeUiState.collectAsState()
     val coroutineScope = rememberCoroutineScope()
     var openSortOptions: Boolean by remember { mutableStateOf(false) }
     var dropSortMenu: Boolean by remember { mutableStateOf(false) }
@@ -113,7 +115,7 @@ fun HomeScreen(
                                     fontWeight = FontWeight.ExtraBold,
                                     fontSize = 15.sp,
 
-                                )
+                                    )
                                 Icon(
                                     Icons.Rounded.ArrowDropDown,
                                     contentDescription = "open sort options"
@@ -153,7 +155,7 @@ fun HomeScreen(
                         }*/
                         IconButton(onClick = {}) {
                             Icon(
-                                Icons.Rounded.Settings,
+                                Icons.Outlined.Settings,
                                 "view settings screen"
                             )
                         }
@@ -164,7 +166,7 @@ fun HomeScreen(
             HomeScreenPadding(
                 onEditClick = onEditClick,
                 onAlbumClick = onAlbumClick,
-                albumList = homeUiState.albumList,
+                albumList = homeUiState.value.albumList,
                 onPlusButtonClick = onCreateNewButtonClick,
                 modifier = modifier
             )
