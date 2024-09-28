@@ -27,7 +27,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -72,7 +71,6 @@ fun HomeScreen(
 ) {
 
     val homeUiState = viewModel.homeUiState.collectAsState()
-    val coroutineScope = rememberCoroutineScope()
     var openSortOptions: Boolean by remember { mutableStateOf(false) }
     var dropSortMenu: Boolean by remember { mutableStateOf(false) }
     var finalChoice: SortOptions by rememberSaveable { mutableStateOf(SortOptions.CREATE) }

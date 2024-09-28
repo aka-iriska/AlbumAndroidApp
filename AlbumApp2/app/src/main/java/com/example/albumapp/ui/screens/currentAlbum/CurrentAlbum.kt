@@ -29,7 +29,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -69,7 +68,6 @@ fun CurrentAlbum(
     albumViewModel: CurrentAlbumViewModel = viewModel(factory = AppViewModelProvider.Factory)
 ) {
     val uiState = albumViewModel.pagesUiState
-    val coroutineScope = rememberCoroutineScope()
     var albumTitle by rememberSaveable { mutableStateOf("") }
 
     Scaffold(
@@ -89,7 +87,7 @@ fun CurrentAlbum(
 
         CurrentAlbumBody(
             albumUiState = uiState,
-            title = albumTitle,
+            //title = albumTitle,
             onEditClick = onEditClick,
             //onItemValueChange = albumViewModel::updateUiState,
             modifier = modifier
@@ -102,24 +100,24 @@ fun CurrentAlbum(
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun CurrentAlbumBody(
-    albumUiState: CurrentAlbumUiState,
-    title: String,
-    onEditClick: (Int) -> Unit = {},
     modifier: Modifier = Modifier,
+    albumUiState: CurrentAlbumUiState,
+    //title: String,
+    onEditClick: (Int) -> Unit = {},
     updateCurrentPage: (Int) -> Unit
 ) {
-    var addedElements = albumUiState.pagesMap
+    val addedElements = albumUiState.pagesMap
     /*todo сделать отображение страниц*/
-    var edittingButtonShown = remember { mutableStateOf(true) }
+    val editingButtonShown = remember { mutableStateOf(true) }
     var pageSize by remember { mutableStateOf(IntSize.Zero) }
 
-    var pageNumber = albumUiState.pageNumber
+    val pageNumber = albumUiState.pageNumber
 
     Box(
         modifier = modifier
             .fillMaxSize()
             .clickable(onClick = {
-                edittingButtonShown.value = !edittingButtonShown.value
+                editingButtonShown.value = !editingButtonShown.value
             })
     ) {
 
@@ -143,7 +141,7 @@ fun CurrentAlbumBody(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
-                var paddingSizeForPage = (min(pageSize.height, pageSize.width) / 22.0).dp
+                val paddingSizeForPage = (min(pageSize.height, pageSize.width) / 22.0).dp
                 val pagerState = rememberPagerState(pageCount = { pageNumber })
                 HorizontalPager(state = pagerState) { _ ->
                     LaunchedEffect(pagerState.settledPage) {
@@ -174,7 +172,7 @@ fun CurrentAlbumBody(
                                     pageSize = newSize
                                 },
                             pageSize = pageSize,
-                            currentPage = albumUiState.currentPage
+                            //currentPage = albumUiState.currentPage
                         )
                     }
                 }
@@ -191,7 +189,7 @@ fun CurrentAlbumBody(
                 .fillMaxSize()
                 .padding(dimensionResource(R.dimen.padding_from_edge))
         ) {
-            if (edittingButtonShown.value) {
+            if (editingButtonShown.value) {
                 FloatingActionButton(
                     onClick = { onEditClick(albumUiState.albumId) }
                 ) {
@@ -212,14 +210,14 @@ fun CurrentAlbumPagesView(
     elements: List<PageElement>,
     modifier: Modifier = Modifier,
     pageSize: IntSize,
-    currentPage: Int,
+    //currentPage: Int,
 ) {
     Box(modifier = modifier) {
         elements.forEach { element ->
             when (element.type) {
                 ElementType.STICKER ->
                     DisplayElement(
-                        pageNumber = currentPage,
+                        //pageNumber = currentPage,
                         elementId = element.resourceId,
                         context = LocalContext.current,
                         pageSize = pageSize,

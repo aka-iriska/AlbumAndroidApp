@@ -32,7 +32,7 @@ import com.example.albumapp.ui.screens.currentAlbum.PageElement
 @Composable
 fun DisplayElement(
     elementId: Int,
-    pageNumber: Int = 0,
+    //pageNumber: Int = 0,
     context: Context = LocalContext.current,
     pageSize: IntSize,
     element: PageElement,
