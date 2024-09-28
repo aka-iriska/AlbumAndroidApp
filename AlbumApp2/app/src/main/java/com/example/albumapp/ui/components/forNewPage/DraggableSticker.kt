@@ -64,7 +64,6 @@ fun DraggableSticker(
         rotation = sticker.rotation
         scale = sticker.scale * pageSize.width
     }
-    /*todo backstack to cancel changes*/
 
     Box(
         modifier = Modifier

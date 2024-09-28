@@ -29,6 +29,7 @@ class CurrentAlbumViewModel(
                 .filterNotNull()
                 .collect { albumDetails ->
                     pagesUiState = albumDetailedListToUiState(albumDetails, isEditing = false)
+                    pagesUiState = pagesUiState.copy(pageNumber = pagesUiState.pagesMap.keys.maxOrNull() ?: 0)
                 }
 
         }
@@ -36,6 +37,9 @@ class CurrentAlbumViewModel(
 
     companion object {
         private const val TIMEOUT_MILLIS = 5_000L
+    }
+    fun updateCurrentPage(newCurrentPage:Int){
+        pagesUiState = pagesUiState.copy(currentPage = newCurrentPage)
     }
 
     suspend fun findTitle(albumId: Int): String {
@@ -67,10 +71,11 @@ data class AlbumDetailed(
 
 data class CurrentAlbumUiState(
     val albumId: Int = 0,
-    val currentPage: Int = 1,
+    val currentPage: Int = 0,
     val pagesMap: Map<Int, List<PageElement>> = emptyMap(),
     val isEditing: Boolean = false,
-    val changed: Boolean = false
+    val changed: Boolean = false,
+    val pageNumber: Int = 0,
 
 )
 

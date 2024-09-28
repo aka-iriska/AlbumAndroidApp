@@ -1,7 +1,7 @@
 package com.example.albumapp.ui.screens.currentAlbum
 
-import android.util.Log
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -12,6 +12,8 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Edit
@@ -44,6 +46,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.albumapp.R
 import com.example.albumapp.data.AppViewModelProvider
+import com.example.albumapp.ui.components.forCountPages.ShowActivePageByRadioButton
 import com.example.albumapp.ui.components.forCurrentAlbum.DisplayElement
 import com.example.albumapp.ui.navigation.AppTopBar
 import com.example.albumapp.ui.navigation.NavigationDestination
@@ -90,36 +93,38 @@ fun CurrentAlbum(
             onEditClick = onEditClick,
             //onItemValueChange = albumViewModel::updateUiState,
             modifier = modifier
-                .padding(innerpadding)
-                .onSizeChanged { Log.d("NEW SIZE UPPER", "----") }
+                .padding(innerpadding),
+            updateCurrentPage = albumViewModel::updateCurrentPage
         )
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun CurrentAlbumBody(
     albumUiState: CurrentAlbumUiState,
     title: String,
     onEditClick: (Int) -> Unit = {},
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    updateCurrentPage: (Int) -> Unit
 ) {
+    var addedElements = albumUiState.pagesMap
     /*todo сделать отображение страниц*/
     var edittingButtonShown = remember { mutableStateOf(true) }
     var pageSize by remember { mutableStateOf(IntSize.Zero) }
+
+    var pageNumber = albumUiState.pageNumber
+
     Box(
         modifier = modifier
             .fillMaxSize()
-            .padding(
-                dimensionResource(id = R.dimen.padding_from_edge)
-            )
             .clickable(onClick = {
                 edittingButtonShown.value = !edittingButtonShown.value
             })
-            .onSizeChanged { newsize -> Log.d("NEW SIZE UPPER1", "$newsize") }
     ) {
 
         /*todo придумать как ещё сказать oops, flag ??*/
-        if (albumUiState.pagesMap.isEmpty()) {
+        if (pageNumber == 0) {
             Column(
                 modifier = Modifier
                     .fillMaxSize(),
@@ -134,46 +139,55 @@ fun CurrentAlbumBody(
         } else {
             Column(
                 modifier = Modifier
-                    .onSizeChanged { newsize -> Log.d("NEW SIZE UPPER2", "$newsize") }
                     .fillMaxSize(),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
                 var paddingSizeForPage = (min(pageSize.height, pageSize.width) / 22.0).dp
-                Column(
-                    modifier = Modifier
-                        .onSizeChanged { newsize -> Log.d("NEW SIZE UPPER3", "$newsize") }
-
-                        .aspectRatio(2f / 3f)
-                        //.padding(dimensionResource(id = R.dimen.padding_from_edge)) // padding до shadow
-                        .shadow(
-                            10.dp,
-                            shape = RoundedCornerShape(8.dp)
-                        ) // shadow с закруглением
-                        .clip(RoundedCornerShape(8.dp)) // Clip для правильной тени
-                        .background(MaterialTheme.colorScheme.surfaceContainerHighest)
-
-
-                ) {
-                    CurrentAlbumPagesView(
-                        elements = albumUiState.pagesMap,
+                val pagerState = rememberPagerState(pageCount = { pageNumber })
+                HorizontalPager(state = pagerState) { _ ->
+                    LaunchedEffect(pagerState.settledPage) {
+                        updateCurrentPage(pagerState.settledPage + 1)
+                    }
+                    Column(
                         modifier = Modifier
+                            .aspectRatio(2f / 3f)
+                            .padding(dimensionResource(id = R.dimen.padding_from_edge)) // padding до shadow
+                            .shadow(
+                                10.dp,
+                                shape = RoundedCornerShape(8.dp)
+                            ) // shadow с закруглением
+                            .clip(RoundedCornerShape(8.dp)) // Clip для правильной тени
+                            .background(MaterialTheme.colorScheme.surfaceContainerHighest)
 
-                            .fillMaxSize()
-                            .padding(paddingSizeForPage)
-                            .onSizeChanged { newSize ->
-                                pageSize = newSize
-                                Log.d("new size", "new size: $newSize,\n pageSize: $pageSize")
-                            },
-                        pageSize = pageSize
-                    )
+
+                    ) {
+                        CurrentAlbumPagesView(
+                            elements = addedElements.getOrDefault(
+                                albumUiState.currentPage,
+                                emptyList()
+                            ),
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(paddingSizeForPage)
+                                .onSizeChanged { newSize ->
+                                    pageSize = newSize
+                                },
+                            pageSize = pageSize,
+                            currentPage = albumUiState.currentPage
+                        )
+                    }
                 }
+                ShowActivePageByRadioButton(
+                    pagerState,
+                    Modifier.align(Alignment.CenterHorizontally)
+                )
             }
         }
         Row(
             horizontalArrangement = Arrangement.End,
             verticalAlignment = Alignment.Bottom,
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier.fillMaxSize().padding(dimensionResource(R.dimen.padding_from_edge))
         ) {
             if (edittingButtonShown.value) {
                 FloatingActionButton(
@@ -193,38 +207,35 @@ fun CurrentAlbumBody(
 
 @Composable
 fun CurrentAlbumPagesView(
-    elements: Map<Int, List<PageElement>>,
+    elements: List<PageElement>,
     modifier: Modifier = Modifier,
     pageSize: IntSize,
-
-    ) {
+    currentPage: Int,
+) {
     Box(modifier = modifier) {
-        elements.forEach { content ->
-            val pageNumber = content.key
-            content.value.forEach { element ->
-                when (element.type) {
-                    ElementType.STICKER ->
-                        DisplayElement(
-                            pageNumber = pageNumber,
-                            elementId = element.resourceId,
-                            context = LocalContext.current,
-                            pageSize = pageSize,
-                            element = element,
-                        )
+        elements.forEach { element ->
+            when (element.type) {
+                ElementType.STICKER ->
+                    DisplayElement(
+                        pageNumber = currentPage,
+                        elementId = element.resourceId,
+                        context = LocalContext.current,
+                        pageSize = pageSize,
+                        element = element,
+                    )
 
-                    ElementType.DEFAULT -> {}
-                    ElementType.IMAGE -> {}
-                    ElementType.TEXT_FIELD -> {}
-                }
+                ElementType.DEFAULT -> {}
+                ElementType.IMAGE -> {}
+                ElementType.TEXT_FIELD -> {}
             }
-
         }
     }
 }
 
+
 @Preview(showBackground = true)
 @Composable
-fun ShowAlbumDetailesPreview() {
+fun ShowAlbumDetailsPreview() {
     AlbumAppTheme {
         Surface(modifier = Modifier.fillMaxSize()) {
             Row(modifier = Modifier.fillMaxWidth()) {

@@ -32,51 +32,54 @@ class CreateNewPagesViewModel(
                 .filterNotNull()
                 .collect { albumDetails ->
                     pagesUiState = albumDetailedListToUiState(albumDetails, isEditing = true)
-                    elementIdCounter += pagesUiState.pagesMap.values.flatten()
-                        .maxOfOrNull { it.id }!!
+                    pagesUiState = pagesUiState.copy(pageNumber = pagesUiState.pagesMap.keys.maxOrNull() ?: 0)
+                    if(pagesUiState.pagesMap.isNotEmpty())
+                        elementIdCounter += pagesUiState.pagesMap.values.flatten()
+                        .maxOf { it.id }
                 }
         }
     }
-
 
     companion object {
         private const val TIMEOUT_MILLIS = 5_000L
     }
 
+    fun addNewPage(){
+        pagesUiState = pagesUiState.copy(pageNumber = pagesUiState.pageNumber+1)
+    }
+    fun updateCurrentPage(newCurrentPage:Int){
+        pagesUiState = pagesUiState.copy(currentPage = newCurrentPage)
+    }
+
     fun updateUiState(pageNumber: Int, element: PageElement, elementId: Int = -1) {
         /*todo разобраться с pageNumber */
-        var newPagesMap = pagesUiState.pagesMap.toMutableMap()
-        // Получаем список элементов для страницы или создаем новый пустой список, если его нет
-        val newPageElementsList = newPagesMap[pageNumber]?.toMutableList() ?: mutableListOf()
-        if (elementId == -1) {
-            val uniqueElement = element.copy(id = elementIdCounter++)
-            // Добавляем новый элемент на страницу
-            newPageElementsList.add(uniqueElement)
-            Log.d("new sticker", "add $uniqueElement \n $elementIdCounter")
-        } else {
-            newPageElementsList.forEachIndexed { index, pageElement ->
-                if (pageElement.id == elementId) {
-                    newPageElementsList[index] = element
-                    Log.d("change sticker", "ch $element\n id to change: $elementId")
-                    return@forEachIndexed
+        if (pageNumber!=0) {
+            var newPagesMap = pagesUiState.pagesMap.toMutableMap()
+            // Получаем список элементов для страницы или создаем новый пустой список, если его нет
+            val newPageElementsList = newPagesMap[pageNumber]?.toMutableList() ?: mutableListOf()
+            if (elementId == -1) {
+                val uniqueElement = element.copy(id = elementIdCounter++)
+                // Добавляем новый элемент на страницу
+                newPageElementsList.add(uniqueElement)
+                Log.d(
+                    "new sticker",
+                    "add $uniqueElement \n $elementIdCounter \n page number: $pageNumber"
+                )
+            } else {
+                newPageElementsList.forEachIndexed { index, pageElement ->
+                    if (pageElement.id == elementId) {
+                        newPageElementsList[index] = element
+                        Log.d("change sticker", "ch $element\n id to change: $elementId")
+                        return@forEachIndexed
+                    }
                 }
             }
-        }
-        // Обновляем карту с новым списком элементов для страницы
-        newPagesMap[pageNumber] = newPageElementsList
+            // Обновляем карту с новым списком элементов для страницы
+            newPagesMap[pageNumber] = newPageElementsList
 
-        // Обновляем состояние pagesUiState
-        pagesUiState = pagesUiState.copy(pagesMap = newPagesMap, changed = true)
-        /////////// для логов
-        pagesUiState.pagesMap.mapValues { content ->
-            content.value.forEach { sticker ->
-                Log.d(
-                    "every sticker",
-                    "sticker id: ${sticker.id}\n resource: ${sticker.resourceId}\n elementId: ${elementId}"
-                )
-            }
+            // Обновляем состояние pagesUiState
+            pagesUiState = pagesUiState.copy(pagesMap = newPagesMap, changed = true)
         }
-
     }
 
     fun deleteElement(pageNumber: Int, elementId: Int) {
@@ -130,14 +133,6 @@ class CreateNewPagesViewModel(
     }
 
     suspend fun savePagesForAlbum() {
-        /*CurrentAlbumUiState(
-        albumId=1,
-        currentPage=1,
-        pagesMap={
-        0=[PageElement(id=1, type=STICKER, offsetX=0.0, offsetY=0.0, scale=0.0, rotation=0.0, resourceId=0, text=, zIndex=0)]
-        },
-        isEditing=true)
-        */
         pagesUiState.pagesMap.map { pageContent ->
             val pageNumber = pageContent.key
             pageContent.value.map { pageElement ->

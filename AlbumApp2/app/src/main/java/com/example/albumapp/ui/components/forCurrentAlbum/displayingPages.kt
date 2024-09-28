@@ -52,12 +52,11 @@ fun DisplayElement(
     } // для увеличения
     var stickerSize by remember { mutableStateOf(IntSize.Zero) } // Размер стикера
 
-    LaunchedEffect(pageSize) {
-
+    LaunchedEffect(pageSize, element.offsetX, element.offsetY) {
         position = Offset(element.offsetX * pageSize.width, element.offsetY * pageSize.height)
         rotation = element.rotation
         scale = element.scale * pageSize.width
-    }/*todo backstack to cancel changes*/
+    }
 
     Box(modifier = Modifier
         .offset {

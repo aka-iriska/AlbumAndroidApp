@@ -47,7 +47,7 @@ class AlbumsViewModel(private val albumsRepository: AlbumsRepository) : ViewMode
         }
     }
 
-    fun saveAlbumCoverLocally(context: Context, albumId: Int): Result<Uri> {
+    private fun saveAlbumCoverLocally(context: Context, albumId: Int): Result<Uri> {
 
         val uri: Uri
         return try {
@@ -96,32 +96,39 @@ class AlbumsViewModel(private val albumsRepository: AlbumsRepository) : ViewMode
                 saveAlbumCoverLocally(context, insertedId.toInt()).onSuccess { permanentUri ->
                     val updatedAlbum =
                         newAlbum.copy(id = insertedId.toInt(), imageCover = permanentUri.toString())
+
                     /**
                      * Updating already saved album with actual link for image
                      */
+
                     albumsRepository.updateAlbum(updatedAlbum)
+
+                    /**
+                     *  Saving the default value to the another table for future adding details
+                     */
+
+                    albumsRepository.insertAlbumDetails(
+                        AlbumDetailed(
+                            id = 0, albumId = insertedId.toInt(),
+                            type = "DEFAULT",
+                            offsetX = 0f,
+                            offsetY = 0f,
+                            scale = 0f,
+                            rotation = 0f,
+                            resourceId = 0,
+                            text = "",
+                            zIndex = 0,
+                            pageNumber = 0
+                        )
+                    )
                 }.onFailure { exception ->
                     // Обработка ошибки сохранения изображения
                     Log.e("Error", "Failed to save image: ${exception.message}")
                 }
             }
-            /**
-             *  Saving the default value to the another table for future adding details
-             */
-            albumsRepository.insertAlbumDetails(
-                AlbumDetailed(
-                    id = 0, albumId = insertedId.toInt(),
-                    type = "DEFAULT",
-                    offsetX = 0f,
-                    offsetY = 0f,
-                    scale = 0f,
-                    rotation = 0f,
-                    resourceId = 0,
-                    text = "",
-                    zIndex = 0,
-                    pageNumber = 0
-                )
-            )
+
+
+
         }
 
 

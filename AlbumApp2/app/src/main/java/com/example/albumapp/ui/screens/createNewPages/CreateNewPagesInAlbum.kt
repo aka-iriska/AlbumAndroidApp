@@ -2,7 +2,9 @@ package com.example.albumapp.ui.screens.createNewPages
 
 import android.content.Context
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -18,6 +20,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -32,8 +36,8 @@ import androidx.compose.material3.IconToggleButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -57,11 +61,13 @@ import coil.decode.SvgDecoder
 import coil.request.ImageRequest
 import com.example.albumapp.R
 import com.example.albumapp.data.AppViewModelProvider
+import com.example.albumapp.ui.components.forCountPages.ShowActivePageByRadioButton
 import com.example.albumapp.ui.components.forHome.SureChoice
 import com.example.albumapp.ui.components.forNewPage.DraggableSticker
 import com.example.albumapp.ui.components.forNewPage.SaveChangesModal
 import com.example.albumapp.ui.navigation.AppTopBar
 import com.example.albumapp.ui.navigation.NavigationDestination
+import com.example.albumapp.ui.screens.currentAlbum.CurrentAlbumUiState
 import com.example.albumapp.ui.screens.currentAlbum.ElementType
 import com.example.albumapp.ui.screens.currentAlbum.PageElement
 import kotlinx.coroutines.launch
@@ -87,6 +93,8 @@ fun CreateNewPages(
         listOf(R.raw.heart, R.raw.star, R.raw.scotch, R.raw.sea_plant, R.raw.instax_square)
     val openAlertDialog = remember { mutableStateOf(false) }
     val coroutineScope = rememberCoroutineScope()
+
+
     Scaffold(topBar = {
         AppTopBar(title = "New pages in album", navigateBack = {
             if (albumUiState.changed) {
@@ -128,26 +136,33 @@ fun CreateNewPages(
             context = context,
             modifier = modifier.padding(innerPadding),
             onUpdate = albumViewModel::updateUiState,
-            addedElements = albumUiState.pagesMap,
+            albumUiState = albumUiState,
             onDelete = albumViewModel::deleteElement,
-            onCancelDelete = albumViewModel::cancelDeleteElement
+            onCancelDelete = albumViewModel::cancelDeleteElement,
+            addNewPage = albumViewModel::addNewPage,
+            updateCurrentPage = albumViewModel::updateCurrentPage
         )
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun CreateNewPagesBody(
     stickersList: List<Int>,
     context: Context,
     modifier: Modifier = Modifier,
     onUpdate: (Int, PageElement, Int) -> Unit,
-    addedElements: Map<Int, List<PageElement>>,
+    albumUiState: CurrentAlbumUiState,
     onDelete: (Int, Int) -> Unit,
-    onCancelDelete: (Int, Int, Int, Int, IntSize) -> Unit
-) {
+    onCancelDelete: (Int, Int, Int, Int, IntSize) -> Unit,
+    addNewPage: () -> Unit,
+    updateCurrentPage:(Int)->Unit
+
+    ) {
+    var addedElements = albumUiState.pagesMap
     var stickersPressed by remember { mutableStateOf(false) }
     var settingsPressed by remember { mutableStateOf(false) }
-    var pageNumber by remember { mutableIntStateOf(0) }
+    var pageNumber = albumUiState.pageNumber
     var pageSize by remember { mutableStateOf(IntSize.Zero) }
 
     Column(modifier = modifier.fillMaxSize()) {
@@ -195,8 +210,9 @@ fun CreateNewPagesBody(
                             stickerId = stickerResId,
                             context = context,
                             onClick = {
+                                Log.d("new sticker", "pageSize: $pageSize")
                                 onUpdate(
-                                    pageNumber,
+                                    albumUiState.currentPage,
                                     PageElement(
                                         type = ElementType.STICKER,
                                         offsetY = 0f / pageSize.width,
@@ -207,6 +223,9 @@ fun CreateNewPagesBody(
                                     ),
                                     -1
                                 )
+                                if (pageNumber == 0 ){
+                                    Toast.makeText(context, "Add at least one page", Toast.LENGTH_LONG).show()
+                                }
                             },
                             modifier = Modifier.stickerChoice()
                         )
@@ -269,7 +288,7 @@ fun CreateNewPagesBody(
 
                 /*todo add adding new pages*/
                 item {
-                    IconButton(onClick = {}) {
+                    IconButton(onClick = addNewPage) {
                         Icon(
                             painterResource(R.drawable.new_page),
                             modifier = Modifier.stickerChoice(),
@@ -285,41 +304,53 @@ fun CreateNewPagesBody(
          * part for viewing [CanvasBody]
          */
 
-        Column(
-            modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.Center
-        ) {
-            var isNearEdge by remember { mutableStateOf(false) } // Для подсветки всей `Column`
-            val paddingSizeForPage = (min(pageSize.height, pageSize.width) / 22).dp
+        if (pageNumber != 0) {
             Column(
-                modifier = Modifier
-                    .aspectRatio(2f / 3f)
-                    .padding(dimensionResource(id = R.dimen.padding_from_edge)) // padding до shadow
-                    .shadow(10.dp, shape = RoundedCornerShape(8.dp)) // shadow с закруглением
-                    .clip(RoundedCornerShape(8.dp)) // Clip для правильной тени
-                    .background(MaterialTheme.colorScheme.surfaceContainerHighest)
-
-
+                modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.Center
             ) {
-                CanvasBody(
-                    pageSize = pageSize,
-                    elements = addedElements,
-                    onUpdate = onUpdate,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .border(
-                            width = paddingSizeForPage,
-                            color = if (isNearEdge) Color.Red.copy(alpha = 0.3f) else Color.Unspecified,
-                            shape = RoundedCornerShape(8.dp)
-                        )
-                        .padding(paddingSizeForPage)
-                        .onSizeChanged { newSize ->
-                            pageSize = newSize
-                            Log.d("new size", "new size: $newSize,\n pageSize: $pageSize")
-                        },
-                    comeToTheEdge = { isNearEdge = it },
-                    onElementRemove = onDelete,
-                    onCancelDelete = onCancelDelete
-                )
+                var isNearEdge by remember { mutableStateOf(false) } // Для подсветки всей `Column`
+                val paddingSizeForPage = (min(pageSize.height, pageSize.width) / 22).dp
+                val pagerState = rememberPagerState(pageCount = { pageNumber })
+                HorizontalPager(state = pagerState) { _ ->
+                    LaunchedEffect(pagerState.settledPage) {
+                        updateCurrentPage(pagerState.settledPage + 1)
+                    }
+                    Column(
+                        modifier = Modifier
+                            .aspectRatio(2f / 3f)
+                            .padding(dimensionResource(id = R.dimen.padding_from_edge)) // padding до shadow
+                            .shadow(
+                                10.dp,
+                                shape = RoundedCornerShape(8.dp)
+                            ) // shadow с закруглением
+                            .clip(RoundedCornerShape(8.dp)) // Clip для правильной тени
+                            .background(MaterialTheme.colorScheme.surfaceContainerHighest)
+                    ) {
+                        CanvasBody(
+                                pageSize = pageSize,
+                                elements = addedElements.getOrDefault(albumUiState.currentPage, emptyList()),
+                                onUpdate = onUpdate,
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .border(
+                                        width = paddingSizeForPage,
+                                        color = if (isNearEdge) Color.Red.copy(alpha = 0.3f) else Color.Unspecified,
+                                        shape = RoundedCornerShape(8.dp)
+                                    )
+                                    .padding(paddingSizeForPage)
+                                    .onSizeChanged { newSize ->
+                                        pageSize = newSize
+                                    },
+                                comeToTheEdge = { isNearEdge = it },
+                                onElementRemove = onDelete,
+                                onCancelDelete = onCancelDelete,
+                                currentPage = albumUiState.currentPage
+                            )
+
+
+                    }
+                }
+                ShowActivePageByRadioButton(pagerState, Modifier.align(Alignment.CenterHorizontally))
             }
         }
     }
@@ -329,11 +360,12 @@ fun CreateNewPagesBody(
 fun CanvasBody(
     modifier: Modifier = Modifier,
     pageSize: IntSize,
-    elements: Map<Int, List<PageElement>> = emptyMap(),
+    elements: List<PageElement> = emptyList(),
     onUpdate: (Int, PageElement, Int) -> Unit,
     onElementRemove: (Int, Int) -> Unit,
     comeToTheEdge: (Boolean) -> Unit,
     onCancelDelete: (Int, Int, Int, Int, IntSize) -> Unit,
+    currentPage: Int
 ) {
     var elementToRemove by remember { mutableStateOf<Pair<Int, Int>?>(null) } // Текущий элемент для удаления
     val additionalColor: Color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
@@ -341,30 +373,26 @@ fun CanvasBody(
     Box(
         modifier = modifier
     ) {
-        elements.forEach { content ->
-            val pageNumber = content.key
-            content.value.forEach { element ->
-                when (element.type) {
-                    ElementType.STICKER -> DraggableSticker(
-                        pageNumber = pageNumber,
-                        stickerId = element.resourceId,
-                        context = LocalContext.current,
-                        pageSize = pageSize,
-                        sticker = element,
-                        onStickerUpdate = onUpdate,
-                        onNear = { comeToTheEdge(it) },
-                        onDelete = {
-                            elementToRemove = Pair(pageNumber, element.id)
-                            elementSize = it
-                        }
-                    )
+        elements.forEach { element ->
+            when (element.type) {
+                ElementType.STICKER -> DraggableSticker(
+                    pageNumber = currentPage,
+                    stickerId = element.resourceId,
+                    context = LocalContext.current,
+                    pageSize = pageSize,
+                    sticker = element,
+                    onStickerUpdate = onUpdate,
+                    onNear = { comeToTheEdge(it) },
+                    onDelete = {
+                        elementToRemove = Pair(currentPage, element.id)
+                        elementSize = it
+                    }
+                )
 
-                    ElementType.DEFAULT -> {}
-                    ElementType.IMAGE -> {}
-                    ElementType.TEXT_FIELD -> {}
-                }
+                ElementType.DEFAULT -> {}
+                ElementType.IMAGE -> {}
+                ElementType.TEXT_FIELD -> {}
             }
-
         }
     }
     elementToRemove?.let {
@@ -428,7 +456,8 @@ fun SvgSticker(
 ) {
     // Получаем идентификатор ресурса по имени файла (без расширения)
     val painter = rememberAsyncImagePainter(
-        model = ImageRequest.Builder(context).data(stickerId).decoderFactory(SvgDecoder.Factory())
+        model = ImageRequest.Builder(context).data(stickerId)
+            .decoderFactory(SvgDecoder.Factory())
             .build(),
     )
 
