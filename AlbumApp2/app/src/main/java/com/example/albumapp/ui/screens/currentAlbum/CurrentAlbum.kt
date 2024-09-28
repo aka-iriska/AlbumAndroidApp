@@ -187,7 +187,9 @@ fun CurrentAlbumBody(
         Row(
             horizontalArrangement = Arrangement.End,
             verticalAlignment = Alignment.Bottom,
-            modifier = Modifier.fillMaxSize().padding(dimensionResource(R.dimen.padding_from_edge))
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(dimensionResource(R.dimen.padding_from_edge))
         ) {
             if (edittingButtonShown.value) {
                 FloatingActionButton(

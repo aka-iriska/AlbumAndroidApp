@@ -29,7 +29,8 @@ class CurrentAlbumViewModel(
                 .filterNotNull()
                 .collect { albumDetails ->
                     pagesUiState = albumDetailedListToUiState(albumDetails, isEditing = false)
-                    pagesUiState = pagesUiState.copy(pageNumber = pagesUiState.pagesMap.keys.maxOrNull() ?: 0)
+                    pagesUiState =
+                        pagesUiState.copy(pageNumber = pagesUiState.pagesMap.keys.maxOrNull() ?: 0)
                 }
 
         }
@@ -38,7 +39,8 @@ class CurrentAlbumViewModel(
     companion object {
         private const val TIMEOUT_MILLIS = 5_000L
     }
-    fun updateCurrentPage(newCurrentPage:Int){
+
+    fun updateCurrentPage(newCurrentPage: Int) {
         pagesUiState = pagesUiState.copy(currentPage = newCurrentPage)
     }
 
@@ -77,7 +79,7 @@ data class CurrentAlbumUiState(
     val changed: Boolean = false,
     val pageNumber: Int = 0,
 
-)
+    )
 
 fun CurrentAlbumUiState.toAlbumDetailedDbClass(
     pageNumber: Int,

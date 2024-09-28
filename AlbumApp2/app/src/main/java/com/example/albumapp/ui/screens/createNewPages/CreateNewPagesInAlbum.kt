@@ -156,9 +156,9 @@ fun CreateNewPagesBody(
     onDelete: (Int, Int) -> Unit,
     onCancelDelete: (Int, Int, Int, Int, IntSize) -> Unit,
     addNewPage: () -> Unit,
-    updateCurrentPage:(Int)->Unit
+    updateCurrentPage: (Int) -> Unit
 
-    ) {
+) {
     var addedElements = albumUiState.pagesMap
     var stickersPressed by remember { mutableStateOf(false) }
     var settingsPressed by remember { mutableStateOf(false) }
@@ -223,8 +223,12 @@ fun CreateNewPagesBody(
                                     ),
                                     -1
                                 )
-                                if (pageNumber == 0 ){
-                                    Toast.makeText(context, "Add at least one page", Toast.LENGTH_LONG).show()
+                                if (pageNumber == 0) {
+                                    Toast.makeText(
+                                        context,
+                                        "Add at least one page",
+                                        Toast.LENGTH_LONG
+                                    ).show()
                                 }
                             },
                             modifier = Modifier.stickerChoice()
@@ -327,30 +331,36 @@ fun CreateNewPagesBody(
                             .background(MaterialTheme.colorScheme.surfaceContainerHighest)
                     ) {
                         CanvasBody(
-                                pageSize = pageSize,
-                                elements = addedElements.getOrDefault(albumUiState.currentPage, emptyList()),
-                                onUpdate = onUpdate,
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .border(
-                                        width = paddingSizeForPage,
-                                        color = if (isNearEdge) Color.Red.copy(alpha = 0.3f) else Color.Unspecified,
-                                        shape = RoundedCornerShape(8.dp)
-                                    )
-                                    .padding(paddingSizeForPage)
-                                    .onSizeChanged { newSize ->
-                                        pageSize = newSize
-                                    },
-                                comeToTheEdge = { isNearEdge = it },
-                                onElementRemove = onDelete,
-                                onCancelDelete = onCancelDelete,
-                                currentPage = albumUiState.currentPage
-                            )
+                            pageSize = pageSize,
+                            elements = addedElements.getOrDefault(
+                                albumUiState.currentPage,
+                                emptyList()
+                            ),
+                            onUpdate = onUpdate,
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .border(
+                                    width = paddingSizeForPage,
+                                    color = if (isNearEdge) Color.Red.copy(alpha = 0.3f) else Color.Unspecified,
+                                    shape = RoundedCornerShape(8.dp)
+                                )
+                                .padding(paddingSizeForPage)
+                                .onSizeChanged { newSize ->
+                                    pageSize = newSize
+                                },
+                            comeToTheEdge = { isNearEdge = it },
+                            onElementRemove = onDelete,
+                            onCancelDelete = onCancelDelete,
+                            currentPage = albumUiState.currentPage
+                        )
 
 
                     }
                 }
-                ShowActivePageByRadioButton(pagerState, Modifier.align(Alignment.CenterHorizontally))
+                ShowActivePageByRadioButton(
+                    pagerState,
+                    Modifier.align(Alignment.CenterHorizontally)
+                )
             }
         }
     }

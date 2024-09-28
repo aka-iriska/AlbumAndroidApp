@@ -32,10 +32,11 @@ class CreateNewPagesViewModel(
                 .filterNotNull()
                 .collect { albumDetails ->
                     pagesUiState = albumDetailedListToUiState(albumDetails, isEditing = true)
-                    pagesUiState = pagesUiState.copy(pageNumber = pagesUiState.pagesMap.keys.maxOrNull() ?: 0)
-                    if(pagesUiState.pagesMap.isNotEmpty())
+                    pagesUiState =
+                        pagesUiState.copy(pageNumber = pagesUiState.pagesMap.keys.maxOrNull() ?: 0)
+                    if (pagesUiState.pagesMap.isNotEmpty())
                         elementIdCounter += pagesUiState.pagesMap.values.flatten()
-                        .maxOf { it.id }
+                            .maxOf { it.id }
                 }
         }
     }
@@ -44,16 +45,17 @@ class CreateNewPagesViewModel(
         private const val TIMEOUT_MILLIS = 5_000L
     }
 
-    fun addNewPage(){
-        pagesUiState = pagesUiState.copy(pageNumber = pagesUiState.pageNumber+1)
+    fun addNewPage() {
+        pagesUiState = pagesUiState.copy(pageNumber = pagesUiState.pageNumber + 1)
     }
-    fun updateCurrentPage(newCurrentPage:Int){
+
+    fun updateCurrentPage(newCurrentPage: Int) {
         pagesUiState = pagesUiState.copy(currentPage = newCurrentPage)
     }
 
     fun updateUiState(pageNumber: Int, element: PageElement, elementId: Int = -1) {
         /*todo разобраться с pageNumber */
-        if (pageNumber!=0) {
+        if (pageNumber != 0) {
             var newPagesMap = pagesUiState.pagesMap.toMutableMap()
             // Получаем список элементов для страницы или создаем новый пустой список, если его нет
             val newPageElementsList = newPagesMap[pageNumber]?.toMutableList() ?: mutableListOf()
