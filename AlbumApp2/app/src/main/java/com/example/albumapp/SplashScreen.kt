@@ -21,7 +21,7 @@ object SplashScreenDestination : NavigationDestination {
 }
 
 @Composable
-fun SplashScreen (navController: NavHostController) {
+fun SplashScreen(navController: NavHostController) {
     Box(
         modifier = Modifier
             .fillMaxSize()
