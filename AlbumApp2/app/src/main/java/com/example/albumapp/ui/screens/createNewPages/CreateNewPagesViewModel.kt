@@ -45,6 +45,10 @@ class CreateNewPagesViewModel(
         private const val TIMEOUT_MILLIS = 5_000L
     }
 
+    fun updatePagesToShow(pages: Int) {
+        pagesUiState = pagesUiState.copy(pagesToShow = pages)
+    }
+
     fun addNewPage() {
         pagesUiState = pagesUiState.copy(pageNumber = pagesUiState.pageNumber + 1)
     }

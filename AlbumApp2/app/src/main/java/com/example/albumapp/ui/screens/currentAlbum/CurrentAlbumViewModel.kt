@@ -78,8 +78,8 @@ data class CurrentAlbumUiState(
     val isEditing: Boolean = false,
     val changed: Boolean = false,
     val pageNumber: Int = 0,
-
-    )
+    val pagesToShow: Int = 1,
+)
 
 fun CurrentAlbumUiState.toAlbumDetailedDbClass(
     pageNumber: Int,

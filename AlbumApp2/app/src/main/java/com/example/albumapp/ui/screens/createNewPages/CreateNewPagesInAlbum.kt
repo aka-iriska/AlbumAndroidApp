@@ -437,6 +437,7 @@ fun CanvasBody(
                                 elementToRemove = null
 
                             },
+                            /*todo исправить cancel, чтобы не показывался*/
                             onCancelClick = {},
                             onNoClick = {
                                 onCancelDelete(

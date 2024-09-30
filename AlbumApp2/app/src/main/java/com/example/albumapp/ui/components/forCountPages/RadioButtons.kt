@@ -24,7 +24,6 @@ fun ShowActivePageByRadioButton(pagerState: PagerState, modifier: Modifier = Mod
         modifier
             .wrapContentHeight()
             .fillMaxWidth()
-
             .padding(bottom = 8.dp),
         horizontalArrangement = Arrangement.Center
     ) {

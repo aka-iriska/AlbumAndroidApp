@@ -3,6 +3,7 @@ package com.example.albumapp.ui.screens.currentAlbum
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -35,6 +36,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.dimensionResource
@@ -141,44 +143,58 @@ fun CurrentAlbumBody(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
-                val paddingSizeForPage = (min(pageSize.height, pageSize.width) / 22.0).dp
+
+                val paddingSizeForPage = (min(pageSize.height, pageSize.width) / 22).dp
                 val pagerState = rememberPagerState(pageCount = { pageNumber })
-                HorizontalPager(state = pagerState) { _ ->
+
+                HorizontalPager(
+                    state = pagerState,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f)
+                ) { _ ->
                     LaunchedEffect(pagerState.settledPage) {
                         updateCurrentPage(pagerState.settledPage + 1)
                     }
-                    Column(
+                    Box(
                         modifier = Modifier
-                            .aspectRatio(2f / 3f)
-                            .padding(dimensionResource(id = R.dimen.padding_from_edge)) // padding до shadow
-                            .shadow(
-                                10.dp,
-                                shape = RoundedCornerShape(8.dp)
-                            ) // shadow с закруглением
-                            .clip(RoundedCornerShape(8.dp)) // Clip для правильной тени
-                            .background(MaterialTheme.colorScheme.surfaceContainerHighest)
-
-
+                            .fillMaxWidth(),
+                        contentAlignment = Alignment.Center // Центрирование содержимого внутри Box
                     ) {
-                        CurrentAlbumPagesView(
-                            elements = addedElements.getOrDefault(
-                                albumUiState.currentPage,
-                                emptyList()
-                            ),
+                        Column(
                             modifier = Modifier
-                                .fillMaxSize()
-                                .padding(paddingSizeForPage)
-                                .onSizeChanged { newSize ->
-                                    pageSize = newSize
-                                },
-                            pageSize = pageSize,
-                            //currentPage = albumUiState.currentPage
-                        )
+                                .aspectRatio(2f / 3f)
+                                .padding(dimensionResource(id = R.dimen.padding_from_edge)) // padding до shadow
+                                .shadow(
+                                    10.dp,
+                                    shape = RoundedCornerShape(8.dp)
+                                ) // shadow с закруглением
+                                .clip(RoundedCornerShape(8.dp)) // Clip для правильной тени
+                                .background(MaterialTheme.colorScheme.surfaceContainerHighest),
+                            verticalArrangement = Arrangement.Center,
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            CurrentAlbumPagesView(
+                                elements = addedElements.getOrDefault(
+                                    albumUiState.currentPage,
+                                    emptyList()
+                                ),
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(paddingSizeForPage)
+                                    .onSizeChanged { newSize ->
+                                        pageSize = newSize
+                                    },
+                                pageSize = pageSize,
+                                //currentPage = albumUiState.currentPage
+                            )
+                        }
                     }
                 }
                 ShowActivePageByRadioButton(
                     pagerState,
-                    Modifier.align(Alignment.CenterHorizontally)
+                    Modifier
+                        .align(Alignment.CenterHorizontally)
                 )
             }
         }

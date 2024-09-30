@@ -66,6 +66,7 @@ dependencies {
     implementation("androidx.room:room-runtime:${rootProject.extra["room_version"]}")
     implementation(libs.androidx.ui.text.google.fonts)
     implementation(libs.androidx.appcompat.resources)
+    implementation(libs.androidx.foundation.android)
     ksp("androidx.room:room-compiler:${rootProject.extra["room_version"]}")
     implementation("androidx.room:room-ktx:${rootProject.extra["room_version"]}")
     // for viewModel
@@ -85,6 +86,8 @@ dependencies {
     implementation(libs.androidx.navigation.runtime.ktx)
     implementation(libs.androidx.navigation.compose)
 
+        //Lottie
+    implementation (libs.lottie.compose)
     // Retrofit
     implementation(libs.retrofit)
 

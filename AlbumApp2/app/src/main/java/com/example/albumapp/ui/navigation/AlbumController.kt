@@ -21,6 +21,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.example.albumapp.SplashScreen
+import com.example.albumapp.SplashScreenDestination
 import com.example.albumapp.ui.screens.createNewAlbum.CreateNewAlbumDestination
 import com.example.albumapp.ui.screens.createNewAlbum.CreateNewAlbumInGallery
 import com.example.albumapp.ui.screens.createNewPages.CreateNewPages
@@ -43,6 +45,9 @@ fun AlbumApp(
         navController = navController,
         startDestination = HomeDestination.route
     ) {
+        composable(route = SplashScreenDestination.route) {
+            SplashScreen(navController = navController)
+        }
         composable(route = HomeDestination.route) {
             HomeScreen(
                 onEditClick = { navController.navigate("${EditAlbumInGalleryDestination.route}/$it") },
