@@ -131,7 +131,12 @@ fun EditableAlbumPage(viewModel: AlbumViewModel) {
             DraggableSticker(
                 stickerRes = sticker.resource,
                 modifier = Modifier
-                    .offset { IntOffset(sticker.offsetX.roundToInt(), sticker.offsetY.roundToInt()) }
+                    .offset {
+                        IntOffset(
+                            sticker.offsetX.roundToInt(),
+                            sticker.offsetY.roundToInt()
+                        )
+                    }
                     .graphicsLayer(scaleX = sticker.scale, scaleY = sticker.scale)
                     .pointerInput(Unit) {
                         detectTransformGestures { _, pan, zoom, _ ->

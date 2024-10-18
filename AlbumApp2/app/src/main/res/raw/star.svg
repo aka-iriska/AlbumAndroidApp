@@ -1,1 +1,13 @@
-<?xml version="1.0" encoding="UTF-8"?><svg id="uuid-48bb6431-59b7-45a8-847a-50fa4945f41b" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 499.85 475.87"><defs><style>.uuid-e0c32c5d-0daa-4727-b216-14412ef05247{fill:#000;stroke:#fff;stroke-dasharray:0 23.65;stroke-linecap:round;stroke-linejoin:round;stroke-width:9.85px;}</style></defs><polygon class="uuid-e0c32c5d-0daa-4727-b216-14412ef05247" points="249.93 4.93 324.88 159.38 494.93 182.93 371.2 301.94 401.35 470.95 249.93 390.05 98.51 470.95 128.66 301.94 4.93 182.93 174.98 159.38 249.93 4.93"/></svg>
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="uuid-48bb6431-59b7-45a8-847a-50fa4945f41b"
+    viewBox="0 0 499.85 475.87"
+    xmlns="http://www.w3.org/2000/svg">
+    <defs>
+        <style>.uuid-e0c32c5d-0daa-4727-b216-14412ef05247{fill:#000;stroke:#fff;stroke-dasharray:0
+            23.65;stroke-linecap:round;stroke-linejoin:round;stroke-width:9.85px;}
+        </style>
+    </defs>
+    <polygon
+        class="uuid-e0c32c5d-0daa-4727-b216-14412ef05247"
+        points="249.93 4.93 324.88 159.38 494.93 182.93 371.2 301.94 401.35 470.95 249.93 390.05 98.51 470.95 128.66 301.94 4.93 182.93 174.98 159.38 249.93 4.93" />
+</svg>

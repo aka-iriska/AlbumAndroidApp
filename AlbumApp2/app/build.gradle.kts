@@ -78,16 +78,16 @@ dependencies {
     // for images from internet
     implementation(libs.coil)
     // Основная библиотека Coil
-    implementation (libs.coil.kt.coil.compose)
+    implementation(libs.coil.kt.coil.compose)
 
     // Модуль для поддержки SVG в Coil
-    implementation (libs.coil.svg.v240)
-    implementation (libs.coil.kt.coil.compose)
+    implementation(libs.coil.svg.v240)
+    implementation(libs.coil.kt.coil.compose)
     implementation(libs.androidx.navigation.runtime.ktx)
     implementation(libs.androidx.navigation.compose)
 
-        //Lottie
-    implementation (libs.lottie.compose)
+    //Lottie
+    implementation(libs.lottie.compose)
     // Retrofit
     implementation(libs.retrofit)
 
