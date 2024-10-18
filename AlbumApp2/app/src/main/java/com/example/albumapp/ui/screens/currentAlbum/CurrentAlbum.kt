@@ -1,5 +1,6 @@
 package com.example.albumapp.ui.screens.currentAlbum
 
+import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -17,6 +18,7 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Edit
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -150,7 +152,7 @@ fun CurrentAlbumBody(
                     modifier = Modifier
                         .fillMaxWidth()
                         .weight(1f)
-                ) { _ ->
+                ) { pageIndex ->
                     LaunchedEffect(pagerState.settledPage) {
                         updateCurrentPage(pagerState.settledPage + 1)
                     }
@@ -172,20 +174,30 @@ fun CurrentAlbumBody(
                             verticalArrangement = Arrangement.Center,
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            CurrentAlbumPagesView(
-                                elements = addedElements.getOrDefault(
-                                    albumUiState.currentPage,
-                                    emptyList()
-                                ),
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .padding(paddingSizeForPage)
-                                    .onSizeChanged { newSize ->
-                                        pageSize = newSize
-                                    },
-                                pageSize = pageSize,
-                                //currentPage = albumUiState.currentPage
-                            )
+                            if (pagerState.settledPage == pageIndex && albumUiState.currentPage == pageIndex + 1) {
+                                CurrentAlbumPagesView(
+                                    elements = addedElements.getOrDefault(
+                                        albumUiState.currentPage,
+                                        emptyList()
+                                    ),
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .padding(paddingSizeForPage)
+                                        .onSizeChanged { newSize ->
+                                            pageSize = newSize
+                                        },
+                                    pageSize = pageSize,
+                                    //currentPage = albumUiState.currentPage
+                                )
+                            } else {
+                                Column(
+                                    modifier = Modifier.fillMaxSize(),
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    verticalArrangement = Arrangement.Center
+                                ) {
+                                    CircularProgressIndicator()
+                                }
+                            }
                         }
                     }
                 }
@@ -228,20 +240,12 @@ fun CurrentAlbumPagesView(
 ) {
     Box(modifier = modifier) {
         elements.forEach { element ->
-            when (element.type) {
-                ElementType.STICKER ->
-                    DisplayElement(
-                        //pageNumber = currentPage,
-                        elementId = element.resourceId,
-                        context = LocalContext.current,
-                        pageSize = pageSize,
-                        element = element,
-                    )
-
-                ElementType.DEFAULT -> {}
-                ElementType.IMAGE -> {}
-                ElementType.TEXT_FIELD -> {}
-            }
+            DisplayElement(
+                elementName = element.resource,
+                context = LocalContext.current,
+                pageSize = pageSize,
+                element = element,
+            )
         }
     }
 }

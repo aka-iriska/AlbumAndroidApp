@@ -1,9 +1,13 @@
 package com.example.albumapp.ui.screens.createNewPages
 
 import android.content.Context
+import android.net.Uri
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -70,6 +74,7 @@ import com.example.albumapp.ui.navigation.NavigationDestination
 import com.example.albumapp.ui.screens.currentAlbum.CurrentAlbumUiState
 import com.example.albumapp.ui.screens.currentAlbum.ElementType
 import com.example.albumapp.ui.screens.currentAlbum.PageElement
+import com.example.albumapp.ui.screens.currentAlbum.stickersMap
 import kotlinx.coroutines.launch
 import kotlin.math.min
 
@@ -89,8 +94,9 @@ fun CreateNewPages(
 ) {
     val albumUiState = albumViewModel.pagesUiState
     val context = LocalContext.current
-    val stickersList =
-        listOf(R.raw.heart, R.raw.star, R.raw.scotch, R.raw.sea_plant, R.raw.instax_square)
+
+    val stickerNames = stickersMap.keys.toList()
+
     val openAlertDialog = remember { mutableStateOf(false) }
     val coroutineScope = rememberCoroutineScope()
 
@@ -117,7 +123,7 @@ fun CreateNewPages(
                 SaveChangesModal(
                     saveChanges = {
                         coroutineScope.launch {
-                            albumViewModel.savePagesForAlbum()
+                            albumViewModel.savePagesForAlbum(context)
                             openAlertDialog.value = false
                             navigateBack(albumUiState.albumId)
                         }
@@ -132,7 +138,7 @@ fun CreateNewPages(
         }
 
         CreateNewPagesBody(
-            stickersList = stickersList,
+            stickersList = stickerNames,
             context = context,
             modifier = modifier.padding(innerPadding),
             onUpdate = albumViewModel::updateUiState,
@@ -148,7 +154,7 @@ fun CreateNewPages(
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun CreateNewPagesBody(
-    stickersList: List<Int>,
+    stickersList: List<String>,
     context: Context,
     modifier: Modifier = Modifier,
     onUpdate: (Int, PageElement, Int) -> Unit,
@@ -164,6 +170,31 @@ fun CreateNewPagesBody(
     var settingsPressed by remember { mutableStateOf(false) }
     var pageNumber = albumUiState.pageNumber
     var pageSize by remember { mutableStateOf(IntSize.Zero) }
+
+    /**
+     * For Image Picker
+     */
+//    var imageUri by rememberSaveable { mutableStateOf<Uri?>(null) }
+    val picker =
+        rememberLauncherForActivityResult(contract = ActivityResultContracts.PickVisualMedia()) { uri: Uri? ->
+            if (uri != null) {
+                /*    imageUri = uri*/
+                onUpdate(
+                    albumUiState.currentPage,
+                    PageElement(
+                        type = ElementType.IMAGE,
+                        offsetY = 0f / pageSize.width,
+                        offsetX = 0f / pageSize.height,
+                        scale = 0.1f,// / min(pageSize.width, pageSize.height),
+                        rotation = 0f,
+                        resource = uri.toString()
+                    ),
+                    -1
+                ) // Обновляем ImageUri
+            } else {
+                Log.e("PhotoPicker", "No media selected")
+            }
+        }
 
     Column(modifier = modifier.fillMaxSize()) {
 
@@ -205,12 +236,12 @@ fun CreateNewPagesBody(
                     }
                 }
                 if (stickersPressed) {
-                    items(stickersList) { stickerResId ->
+                    items(stickersList) { stickerName ->
+                        val stickerResId = stickersMap[stickerName]
                         SvgSticker(
-                            stickerId = stickerResId,
+                            stickerId = stickerResId!!,
                             context = context,
                             onClick = {
-                                Log.d("new sticker", "pageSize: $pageSize")
                                 onUpdate(
                                     albumUiState.currentPage,
                                     PageElement(
@@ -219,7 +250,7 @@ fun CreateNewPagesBody(
                                         offsetX = 0f / pageSize.height,
                                         scale = 0.1f,// / min(pageSize.width, pageSize.height),
                                         rotation = 0f,
-                                        resourceId = stickerResId
+                                        resource = stickerName
                                     ),
                                     -1
                                 )
@@ -242,7 +273,9 @@ fun CreateNewPagesBody(
 
                 /*todo add adding images*/
                 item {
-                    IconButton(onClick = {}) {
+                    IconButton(onClick = {
+                        picker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+                    }) {
                         Icon(
                             painterResource(R.drawable.add_photo),
                             modifier = Modifier.stickerChoice(),
@@ -315,7 +348,7 @@ fun CreateNewPagesBody(
                 var isNearEdge by remember { mutableStateOf(false) } // Для подсветки всей `Column`
                 val paddingSizeForPage = (min(pageSize.height, pageSize.width) / 22).dp
                 val pagerState = rememberPagerState(pageCount = { pageNumber })
-                HorizontalPager(state = pagerState) { _ ->
+                HorizontalPager(state = pagerState) { pageIndex ->
                     LaunchedEffect(pagerState.settledPage) {
                         updateCurrentPage(pagerState.settledPage + 1)
                     }
@@ -330,31 +363,39 @@ fun CreateNewPagesBody(
                             .clip(RoundedCornerShape(8.dp)) // Clip для правильной тени
                             .background(MaterialTheme.colorScheme.surfaceContainerHighest)
                     ) {
-                        CanvasBody(
-                            pageSize = pageSize,
-                            elements = addedElements.getOrDefault(
-                                albumUiState.currentPage,
-                                emptyList()
-                            ),
-                            onUpdate = onUpdate,
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .border(
-                                    width = paddingSizeForPage,
-                                    color = if (isNearEdge) Color.Red.copy(alpha = 0.3f) else Color.Unspecified,
-                                    shape = RoundedCornerShape(8.dp)
-                                )
-                                .padding(paddingSizeForPage)
-                                .onSizeChanged { newSize ->
-                                    pageSize = newSize
-                                },
-                            comeToTheEdge = { isNearEdge = it },
-                            onElementRemove = onDelete,
-                            onCancelDelete = onCancelDelete,
-                            currentPage = albumUiState.currentPage
-                        )
+                        if (pagerState.settledPage == pageIndex && albumUiState.currentPage == pageIndex + 1) {
+                            updateCurrentPage(pagerState.settledPage + 1)
+                            CanvasBody(
+                                pageSize = pageSize,
+                                elements = addedElements.getOrDefault(
+                                    albumUiState.currentPage,
+                                    emptyList()
+                                ),
+                                onUpdate = onUpdate,
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .border(
+                                        width = paddingSizeForPage,
+                                        color = if (isNearEdge) Color.Red.copy(alpha = 0.3f) else Color.Unspecified,
+                                        shape = RoundedCornerShape(8.dp)
+                                    )
+                                    .padding(paddingSizeForPage)
+                                    .onSizeChanged { newSize ->
+                                        pageSize = newSize
+                                    },
+                                comeToTheEdge = { isNearEdge = it },
+                                onElementRemove = onDelete,
+                                onCancelDelete = onCancelDelete,
+                                currentPage = albumUiState.currentPage
+                            )
+                        } /*else {
+                            Column(
+                                modifier = Modifier.fillMaxSize(),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.Center
+                            ) { CircularProgressIndicator() }
 
-
+                        }*/
                     }
                 }
                 ShowActivePageByRadioButton(
@@ -384,25 +425,19 @@ fun CanvasBody(
         modifier = modifier
     ) {
         elements.forEach { element ->
-            when (element.type) {
-                ElementType.STICKER -> DraggableSticker(
-                    pageNumber = currentPage,
-                    stickerId = element.resourceId,
-                    context = LocalContext.current,
-                    pageSize = pageSize,
-                    sticker = element,
-                    onStickerUpdate = onUpdate,
-                    onNear = { comeToTheEdge(it) },
-                    onDelete = {
-                        elementToRemove = Pair(currentPage, element.id)
-                        elementSize = it
-                    }
-                )
-
-                ElementType.DEFAULT -> {}
-                ElementType.IMAGE -> {}
-                ElementType.TEXT_FIELD -> {}
-            }
+            DraggableSticker(
+                pageNumber = currentPage,
+                elementName = element.resource,
+                context = LocalContext.current,
+                pageSize = pageSize,
+                element = element,
+                onElementUpdate = onUpdate,
+                onNear = { comeToTheEdge(it) },
+                onDelete = {
+                    elementToRemove = Pair(currentPage, element.id)
+                    elementSize = it
+                }
+            )
         }
     }
     elementToRemove?.let {
