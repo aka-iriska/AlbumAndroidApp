@@ -135,12 +135,10 @@ fun EnterAlbumDetails(
     val picker =
         rememberLauncherForActivityResult(contract = ActivityResultContracts.PickVisualMedia()) { uri: Uri? ->
             if (uri != null) {
-                //Log.d("PhotoPicker", "Selected URI: $uri")
                 imageUri = uri
-                //Log.d("uri", uri.toString())
                 onItemValueChange(albumUiState.copy(imageCover = uri.toString())) // Обновляем albumImageUri
             } else {
-                Log.d("PhotoPicker", "No media selected")
+                Log.e("PhotoPicker", "No media selected")
             }
         }
 
