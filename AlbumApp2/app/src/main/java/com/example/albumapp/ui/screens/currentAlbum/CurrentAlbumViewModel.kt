@@ -9,6 +9,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.PrimaryKey
+import com.example.albumapp.R
 import com.example.albumapp.data.AlbumsRepository
 import com.example.albumapp.ui.screens.createNewAlbum.Album
 import kotlinx.coroutines.flow.filterNotNull
@@ -65,8 +66,7 @@ data class AlbumDetailed(
     val offsetY: Float,
     val scale: Float,
     val rotation: Float,
-    val resourceId: Int, // для стикеров и изображений
-    val text: String, // для текстовых полей
+    val resource: String, // путь для стикеров и фото, текст для текстовых полей
     val zIndex: Int,          // Z-индекс для управления наложением элементов
     val pageNumber: Int
 )
@@ -92,8 +92,7 @@ fun CurrentAlbumUiState.toAlbumDetailedDbClass(
     offsetY = element.offsetY,
     scale = element.scale,
     rotation = element.rotation,
-    resourceId = element.resourceId, // для стикеров и изображений
-    text = element.text, // для текстовых полей
+    resource = element.resource,
     zIndex = element.zIndex,
     pageNumber = pageNumber
 )
@@ -105,8 +104,7 @@ data class PageElement(
     val offsetY: Float = 0f,
     val scale: Float = 1f,
     val rotation: Float = 0f,
-    val resourceId: Int = 0, // для стикеров и изображений
-    val text: String = "", // для текстовых полей
+    val resource: String = "",
     val zIndex: Int = 0,          // Z-индекс для управления наложением элементов
     val originalWidth: Float = 0f,
     val originalHeight: Float = 0f
@@ -131,8 +129,7 @@ fun albumDetailedListToUiState(
                         offsetY = albumDetailed.offsetY,
                         scale = albumDetailed.scale,
                         rotation = albumDetailed.rotation,
-                        resourceId = albumDetailed.resourceId,
-                        text = albumDetailed.text,
+                        resource = albumDetailed.resource,
                         zIndex = albumDetailed.zIndex
                     )
                 }
@@ -155,3 +152,11 @@ fun stringToElementType(type: String): ElementType {
         ElementType.STICKER // или любое другое значение по умолчанию
     }
 }
+
+val stickersMap = mapOf(
+    "heart" to R.raw.heart,
+    "star" to R.raw.star,
+    "scotch" to R.raw.scotch,
+    "sea_plant" to R.raw.sea_plant,
+    "instax_square" to R.raw.instax_square
+)

@@ -1,5 +1,6 @@
 package com.example.albumapp.ui.screens.createNewPages
 
+import android.content.Context
 import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -10,9 +11,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.albumapp.data.AlbumsRepository
 import com.example.albumapp.ui.screens.currentAlbum.CurrentAlbumUiState
+import com.example.albumapp.ui.screens.currentAlbum.ElementType
 import com.example.albumapp.ui.screens.currentAlbum.PageElement
 import com.example.albumapp.ui.screens.currentAlbum.albumDetailedListToUiState
 import com.example.albumapp.ui.screens.currentAlbum.toAlbumDetailedDbClass
+import com.example.albumapp.utils.saveImagePathLocally
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.launch
 import okhttp3.internal.toImmutableList
@@ -58,7 +61,7 @@ class CreateNewPagesViewModel(
     }
 
     fun updateUiState(pageNumber: Int, element: PageElement, elementId: Int = -1) {
-        /*todo разобраться с pageNumber */
+        Log.d("before update", "${pagesUiState.pagesMap}")
         if (pageNumber != 0) {
             var newPagesMap = pagesUiState.pagesMap.toMutableMap()
             // Получаем список элементов для страницы или создаем новый пустой список, если его нет
@@ -67,15 +70,10 @@ class CreateNewPagesViewModel(
                 val uniqueElement = element.copy(id = elementIdCounter++)
                 // Добавляем новый элемент на страницу
                 newPageElementsList.add(uniqueElement)
-                Log.d(
-                    "new sticker",
-                    "add $uniqueElement \n $elementIdCounter \n page number: $pageNumber"
-                )
             } else {
                 newPageElementsList.forEachIndexed { index, pageElement ->
                     if (pageElement.id == elementId) {
                         newPageElementsList[index] = element
-                        Log.d("change sticker", "ch $element\n id to change: $elementId")
                         return@forEachIndexed
                     }
                 }
@@ -128,7 +126,6 @@ class CreateNewPagesViewModel(
             }
         }
         currentPageElements?.let {
-            Log.d("upd", "new list:$currentPageElements")
             val updatesPageElements: List<PageElement> = currentPageElements.toImmutableList()
             pagesUiState = pagesUiState.copy(
                 pagesMap = pagesUiState.pagesMap.toMutableMap().apply {
@@ -138,16 +135,41 @@ class CreateNewPagesViewModel(
 
     }
 
-    suspend fun savePagesForAlbum() {
+    suspend fun savePagesForAlbum(context: Context) {
         pagesUiState.pagesMap.map { pageContent ->
             val pageNumber = pageContent.key
             pageContent.value.map { pageElement ->
                 val albumDetailedDb = pagesUiState.toAlbumDetailedDbClass(pageNumber, pageElement)
-                albumsRepository.insertAlbumDetails(albumDetailedDb)
+                val insertedId = albumsRepository.insertAlbumDetails(albumDetailedDb)
+                /**
+                 * if we save image we need to reload real path
+                 */
+                if (pageElement.type == ElementType.IMAGE && pageElement.resource.startsWith("content://")) {
+                    saveImagePathLocally(
+                        pageElement.resource,
+                        context,
+                        insertedId.toInt(),
+                        "image_element"
+                    ).onSuccess { permanentUri ->
+                        val updatedPageElement =
+                            albumDetailedDb.copy(
+                                id = insertedId.toInt(),
+                                resource = permanentUri.toString()
+                            )
+                        /**
+                         * Updating already saved album with actual link for image
+                         */
+
+                        albumsRepository.updateAlbumDetails(updatedPageElement)
+                    }.onFailure { exception ->
+                        // Обработка ошибки сохранения изображения
+                        Log.e("Error", "Failed to save image: ${exception.message}")
+                    }
+                }
             }
         }
-    }
 
+    }
 }
 
 

@@ -1,7 +1,6 @@
 package com.example.albumapp.ui.screens.createNewAlbum
 
 import android.content.Context
-import android.net.Uri
 import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -11,9 +10,8 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 import com.example.albumapp.data.AlbumsRepository
 import com.example.albumapp.ui.screens.currentAlbum.AlbumDetailed
+import com.example.albumapp.utils.saveImagePathLocally
 import kotlinx.coroutines.flow.first
-import java.io.File
-import java.io.IOException
 import java.sql.Timestamp
 
 class AlbumsViewModel(private val albumsRepository: AlbumsRepository) : ViewModel() {
@@ -47,31 +45,6 @@ class AlbumsViewModel(private val albumsRepository: AlbumsRepository) : ViewMode
         }
     }
 
-    private fun saveAlbumCoverLocally(context: Context, albumId: Int): Result<Uri> {
-
-        val uri: Uri
-        return try {
-            uri = if (albumsUiState.imageCover.isNotEmpty()) {
-                Uri.parse(albumsUiState.imageCover)
-            } else {
-                throw IllegalArgumentException("Image cover URI is empty") // Throw exception for empty URI
-            }
-            val contentResolver = context.contentResolver
-            val inputStream = contentResolver.openInputStream(uri)
-            val file = File(context.filesDir, "album_cover_$albumId.jpg")
-
-            inputStream?.use { input ->
-                file.outputStream().use { output ->
-                    input.copyTo(output)
-                }
-            }
-
-            Result.success(Uri.fromFile(file))
-        } catch (e: IOException) {
-            Result.failure(ImageSavingException("Failed to save image: ${e.message}"))
-        }
-    }
-
     private fun saveTimeOfSaving(uiState: AlbumsUiState = albumsUiState): Boolean {
         updateUiState(uiState.copy(dateOfCreation = Timestamp(System.currentTimeMillis()).toString()))
         return true
@@ -93,7 +66,12 @@ class AlbumsViewModel(private val albumsRepository: AlbumsRepository) : ViewMode
                 /**
                  * Making the link for image with the real id of album
                  */
-                saveAlbumCoverLocally(context, insertedId.toInt()).onSuccess { permanentUri ->
+                saveImagePathLocally(
+                    albumsUiState.imageCover,
+                    context,
+                    insertedId.toInt(),
+                    "album_cover"
+                ).onSuccess { permanentUri ->
                     val updatedAlbum =
                         newAlbum.copy(id = insertedId.toInt(), imageCover = permanentUri.toString())
 
@@ -115,8 +93,7 @@ class AlbumsViewModel(private val albumsRepository: AlbumsRepository) : ViewMode
                             offsetY = 0f,
                             scale = 0f,
                             rotation = 0f,
-                            resourceId = 0,
-                            text = "",
+                            resource = "",
                             zIndex = 0,
                             pageNumber = 0
                         )
