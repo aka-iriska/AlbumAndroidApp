@@ -8,6 +8,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.room.Entity
 import androidx.room.ForeignKey
+import androidx.room.Index
 import androidx.room.PrimaryKey
 import com.example.albumapp.R
 import com.example.albumapp.data.AlbumsRepository
@@ -21,7 +22,7 @@ class CurrentAlbumViewModel(
 ) : ViewModel() {
     var pagesUiState by mutableStateOf(CurrentAlbumUiState())
         private set
-    private val albumId: Int = checkNotNull(savedStateHandle[CurrentAlbumDestination.AlbumIdArg])
+    private val albumId: Int = checkNotNull(savedStateHandle[CurrentAlbumDestination.ALBUM_ID_ARG])
 
     init {
         viewModelScope.launch {
@@ -37,9 +38,9 @@ class CurrentAlbumViewModel(
         }
     }
 
-    companion object {
+/*    companion object {
         private const val TIMEOUT_MILLIS = 5_000L
-    }
+    }*/
 
     fun updateCurrentPage(newCurrentPage: Int) {
         pagesUiState = pagesUiState.copy(currentPage = newCurrentPage)
@@ -49,9 +50,13 @@ class CurrentAlbumViewModel(
         return albumsRepository.getAlbumTitleForDetailed(albumId)
     }
 }
-
+// SQLite не поддерживает прямое создание кластерного индекса
+// добавить обычный индекс для столбца, но данные физически не будут перемещены в порядке индекса.
+// foreign key автоматически не проиндексирован
 @Entity(
-    tableName = "albumDetailsTable", foreignKeys = [ForeignKey(
+    tableName = "albumDetailsTable",
+    indices = [Index(value = ["albumId"])],
+    foreignKeys = [ForeignKey(
         entity = Album::class,
         parentColumns = arrayOf("id"),
         childColumns = arrayOf("albumId"),
@@ -85,7 +90,6 @@ fun CurrentAlbumUiState.toAlbumDetailedDbClass(
     pageNumber: Int,
     element: PageElement
 ): AlbumDetailed = AlbumDetailed(
-    id = element.id,
     albumId = this.albumId,
     type = element.type.toString(),
     offsetX = element.offsetX,
@@ -106,8 +110,6 @@ data class PageElement(
     val rotation: Float = 0f,
     val resource: String = "",
     val zIndex: Int = 0,          // Z-индекс для управления наложением элементов
-    val originalWidth: Float = 0f,
-    val originalHeight: Float = 0f
 )
 
 enum class ElementType {
