@@ -2,6 +2,7 @@
 
 package com.example.albumapp.ui.screens.editAlbumInGallery
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -16,6 +17,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SelectableDates
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDatePickerState
@@ -36,6 +38,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.albumapp.R
 import com.example.albumapp.data.AppViewModelProvider
 import com.example.albumapp.ui.components.MySpacer
+import com.example.albumapp.ui.components.forNewPage.SaveChangesModal
 import com.example.albumapp.ui.navigation.AppTopBar
 import com.example.albumapp.ui.navigation.NavigationDestination
 import com.example.albumapp.ui.screens.createNewAlbum.AlbumsUiState
@@ -49,8 +52,8 @@ import java.util.Locale
 object EditAlbumInGalleryDestination : NavigationDestination {
     override val route = "edit_chosen_album"
     override val titleRes = R.string.edit_album_main_info
-    const val AlbumIdArg = "itemId"
-    val routeWithArgs = "$route/{$AlbumIdArg}"
+    const val ALBUM_ID_ARG = "itemId"
+    val routeWithArgs = "$route/{$ALBUM_ID_ARG}"
 }
 
 @Composable
@@ -61,13 +64,46 @@ fun EditAlbumInGallery(
 ) {
     val uiState = viewModel.albumsUiState
     val coroutineScope = rememberCoroutineScope()
-    var context = LocalContext.current
+    val context = LocalContext.current
+    val albumsUiSate = viewModel.albumsUiState
+
+    val openAlertDialog = remember { mutableStateOf(false) }
     Scaffold(topBar = {
         AppTopBar(
-            title = "Edit ${uiState.title}", navigateBack = navigateBack
+            title = "Edit ${uiState.title}", navigateBack = {
+                if (albumsUiSate.isEntryValid) {
+                    openAlertDialog.value = true
+                } else {
+                    navigateBack()
+                }
+            }
         )
     }) { innerpadding ->
+        BackHandler {
+            if (albumsUiSate.isEntryValid) {
+                openAlertDialog.value = !openAlertDialog.value
+            } else {
+                navigateBack()
+            }
+        }
+        when {
+            openAlertDialog.value -> {
+                SaveChangesModal(
+                    saveChanges = {
+                        coroutineScope.launch {
+                            viewModel.updateAlbum(context)
+                            openAlertDialog.value = false
+                            navigateBack()
+                        }
+                    },
+                    onDismissRequest = { openAlertDialog.value = false },
+                    onNavigateBack = {
+                        openAlertDialog.value = false
+                        navigateBack()
+                    })
+            }
 
+        }
         EditAlbumInGalleryBody(
             albumUiState = uiState,
             onAlbumValueChange = viewModel::updateUiState,
@@ -86,7 +122,6 @@ fun EditAlbumInGallery(
 
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditAlbumInGalleryBody(
     albumUiState: AlbumsUiState,
@@ -94,7 +129,7 @@ fun EditAlbumInGalleryBody(
     onSaveClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var containerColor = MaterialTheme.colorScheme.primaryContainer
+    val containerColor = MaterialTheme.colorScheme.primaryContainer
     var addDescription by remember { mutableStateOf(albumUiState.description != "") }
     var addDateOfActivity by remember { mutableStateOf(albumUiState.dateOfActivity != "") }
     LazyColumn(modifier = modifier) {
@@ -103,7 +138,7 @@ fun EditAlbumInGalleryBody(
                 value = albumUiState.title,
                 label = stringResource(id = R.string.title_for_album_entry),
                 onValueChange = { onAlbumValueChange(albumUiState.copy(title = it)) },
-                ContainerColor = containerColor
+                containerColor = containerColor
             )
         }
         item { MySpacer() }
@@ -113,7 +148,7 @@ fun EditAlbumInGalleryBody(
                     value = albumUiState.description,
                     label = stringResource(id = R.string.descr_for_album_entry),
                     onValueChange = { onAlbumValueChange(albumUiState.copy(description = it)) },
-                    ContainerColor = containerColor,
+                    containerColor = containerColor,
                     singleLine = false
                 )
             }
@@ -127,12 +162,6 @@ fun EditAlbumInGalleryBody(
                 )
             }
         }
-//        item {
-//            DateTimePicker(
-//                albumUiState = albumUiState,
-//                onItemValueChange = onAlbumValueChange
-//            )
-//        }
         item {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -185,11 +214,7 @@ fun DateTimePickerForEdit(
         selected = showDatePicker,
         onDismiss = { showDatePicker = false },
         onSave = {
-            selectedDateText = SimpleDateFormat(
-                "MM-dd-yyyy",
-                Locale
-                    .getDefault()
-            )
+            selectedDateText = SimpleDateFormat("MM-dd-yyyy", Locale.getDefault())
                 .format(Date(datePickerState.selectedDateMillis!!))
             onItemValueChange(albumUiState.copy(dateOfActivity = selectedDateText))
             showDatePicker = false
@@ -201,9 +226,9 @@ fun DateTimePickerForEdit(
      * for extra date entry
      */
     var chooseEndOfEvent by rememberSaveable {
-        mutableStateOf<Boolean>(false)
+        mutableStateOf(false)
     }
-    var greyTextTitle: String =
+    val greyTextTitle: String =
         if (chooseEndOfEvent) stringResource(id = R.string.remove_date_of_end) else stringResource(
             id = R.string.add_date_of_end
         )
@@ -227,10 +252,19 @@ fun DateTimePickerForEdit(
                 },
             ) { Text(text = stringResource(R.string.clear_date_time)) }
         }
+
         MySpacer()
     }
 
     if (chooseEndOfEvent || selectedEndDateText != "") {
+        val endDatePickerState = rememberDatePickerState(
+            selectableDates = object : SelectableDates {
+                override fun isSelectableDate(utcTimeMillis: Long): Boolean {
+                    return utcTimeMillis > (datePickerState.selectedDateMillis
+                        ?: Long.MAX_VALUE) // Разрешаем только даты после выбранной
+                }
+            }
+        )
         TextFieldForDates(
             labelForDate = R.string.end_date_of_event_field,
             selectedDateText = selectedEndDateText,
@@ -243,14 +277,16 @@ fun DateTimePickerForEdit(
                         endDateOfActivity = SimpleDateFormat(
                             "MM-dd-yyyy",
                             Locale.getDefault()
-                        ).format(datePickerState.selectedDateMillis!!)
+                        ).format(endDatePickerState.selectedDateMillis!!)
                     )
                 )
                 showDatePicker = false
             },
-            datePickerState = datePickerState
+            datePickerState = endDatePickerState
         )
+
         MySpacer()
+
         if (selectedEndDateText != "") {
             Row(horizontalArrangement = Arrangement.End) {
                 TextButton(
@@ -272,7 +308,7 @@ fun MyTextField(
     value: String,
     onValueChange: (String) -> Unit,
     label: String,
-    ContainerColor: Color,
+    containerColor: Color,
     singleLine: Boolean = true
 ) {
     OutlinedTextField(
@@ -282,11 +318,11 @@ fun MyTextField(
         modifier = Modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.medium,
         colors = OutlinedTextFieldDefaults.colors(
-            focusedContainerColor = ContainerColor,
-            unfocusedContainerColor = ContainerColor,
-            disabledContainerColor = ContainerColor,
-            focusedBorderColor = ContainerColor,
-            unfocusedBorderColor = ContainerColor
+            focusedContainerColor = containerColor,
+            unfocusedContainerColor = containerColor,
+            disabledContainerColor = containerColor,
+            focusedBorderColor = containerColor,
+            unfocusedBorderColor = containerColor
         ),
         singleLine = singleLine
     )
@@ -379,7 +415,7 @@ fun TitleEventEndOnlyPreview() {
 
 @Preview(showBackground = true)
 @Composable
-fun allBodyPreview() {
+fun AllBodyPreview() {
     AlbumAppTheme {
         Column(modifier = Modifier.fillMaxSize()) {
             EditAlbumInGalleryBody(

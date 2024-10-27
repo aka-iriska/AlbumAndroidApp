@@ -2,6 +2,7 @@ package com.example.albumapp.ui.screens.createNewAlbum
 
 import android.net.Uri
 import android.util.Log
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -40,6 +41,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SelectableDates
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -69,6 +71,7 @@ import coil.request.ImageRequest
 import com.example.albumapp.R
 import com.example.albumapp.data.AppViewModelProvider
 import com.example.albumapp.ui.components.MySpacer
+import com.example.albumapp.ui.components.forNewPage.SaveChangesModal
 import com.example.albumapp.ui.navigation.AppTopBar
 import com.example.albumapp.ui.navigation.NavigationDestination
 import com.example.albumapp.ui.theme.AlbumAppTheme
@@ -80,8 +83,6 @@ import java.util.Locale
 object CreateNewAlbumDestination : NavigationDestination {
     override val route = "create_new_album_in_gallery"
     override val titleRes = R.string.create_new_album_on_home_screen
-    const val AlbumIdArg = "itemId"
-    val routeWithArgs = "$route/{$AlbumIdArg}"
 }
 
 /*TODO redo colors and to add date of activity*/
@@ -93,19 +94,52 @@ fun CreateNewAlbumInGallery(
     albumsViewModel: AlbumsViewModel = viewModel(factory = AppViewModelProvider.Factory)
 ) {
     val coroutineScope = rememberCoroutineScope()
-    var context = LocalContext.current
+    val context = LocalContext.current
+    val albumsUiSate = albumsViewModel.albumsUiState
+
+    val openAlertDialog = remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
             AppTopBar(
                 title = stringResource(id = CreateNewAlbumDestination.titleRes),
-                navigateBack = navigateBack
+                navigateBack = {
+                    if (albumsUiSate.isEntryValid) {
+                        openAlertDialog.value = true
+                    } else {
+                        navigateBack()
+                    }
+                }
             )
         }
     ) { innerpadding ->
+        BackHandler {
+            if (albumsUiSate.isEntryValid) {
+                openAlertDialog.value = !openAlertDialog.value
+            } else {
+                navigateBack()
+            }
+        }
+        when {
+            openAlertDialog.value -> {
+                SaveChangesModal(
+                    saveChanges = {
+                        coroutineScope.launch {
+                            albumsViewModel.saveItem(context)
+                            openAlertDialog.value = false
+                            navigateBack()
+                        }
+                    },
+                    onDismissRequest = { openAlertDialog.value = false },
+                    onNavigateBack = {
+                        openAlertDialog.value = false
+                        navigateBack()
+                    })
+            }
 
+        }
         EnterAlbumDetails(
-            albumUiState = albumsViewModel.albumsUiState,
+            albumUiState = albumsUiSate,
             onItemValueChange = albumsViewModel::updateUiState,
             onSaveClick = {
                 coroutineScope.launch {
@@ -301,21 +335,23 @@ fun DateTimePicker(
     onItemValueChange: (AlbumsUiState) -> Unit
 ) {
     /**
-     * For Date Picker
+     * Date Picker for Start Date (Date of Event)
      */
+
     var showDatePicker by remember { mutableStateOf(false) }
     val datePickerState = rememberDatePickerState()
     var selectedDate by rememberSaveable { mutableStateOf<Long?>(null) }
+
     var selectedDateText: String = ""
     if (selectedDate != null) {
-        val date = Date(selectedDate!!)
-        val formattedDate = SimpleDateFormat("MM-dd-yyyy", Locale.getDefault()).format(date)
+        val formattedDate =
+            SimpleDateFormat("MM-dd-yyyy", Locale.getDefault()).format(Date(selectedDate!!))
         selectedDateText = formattedDate
         onItemValueChange(albumUiState.copy(dateOfActivity = selectedDateText))
-
     } else {
         selectedDateText = ""
     }
+
     TextFieldForDates(
         labelForDate = R.string.date_of_the_event,
         selectedDateText = selectedDateText,
@@ -326,92 +362,91 @@ fun DateTimePicker(
             selectedDate = datePickerState.selectedDateMillis
             showDatePicker = false
         },
-        datePickerState = datePickerState
+        datePickerState = datePickerState,
     )
-    MySpacer()
-    /**
-     * for extra date entry
-     */
-    var chooseEndOfEvent by rememberSaveable {
-        mutableStateOf<Boolean>(false)
-    }
-    var greyTextTitle: String =
-        if (chooseEndOfEvent) stringResource(id = R.string.remove_date_of_end) else stringResource(
-            id = R.string.add_date_of_end
-        )
-    if (selectedDateText != "") {
 
+    MySpacer()
+
+    /**
+     * Extra Date Entry (End Date)
+     */
+
+    var chooseEndOfEvent by rememberSaveable { mutableStateOf(false) }
+    val greyTextTitle = if (chooseEndOfEvent) {
+        stringResource(id = R.string.remove_date_of_end)
+    } else {
+        stringResource(id = R.string.add_date_of_end)
+    }
+
+    if (selectedDateText.isNotEmpty()) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            TextButton(
-                onClick = {
-                    chooseEndOfEvent = !chooseEndOfEvent
-                })
-            {
-                Text(
-                    text = greyTextTitle,
-                )
+            TextButton(onClick = { chooseEndOfEvent = !chooseEndOfEvent }) {
+                Text(text = greyTextTitle)
             }
             TextButton(
                 onClick = {
                     onItemValueChange(albumUiState.copy(dateOfActivity = ""))
                     selectedDate = null
                     chooseEndOfEvent = false
-                },
-            )
-            {
-                Text(
-                    text = stringResource(R.string.clear_date_time),
-                )
+                }
+            ) {
+                Text(text = stringResource(R.string.clear_date_time))
             }
         }
+    }
 
-    }
-    var selectedEndDate by rememberSaveable { mutableStateOf<Long?>(null) }
-    var selectedEndDateText: String = ""
-    if (selectedEndDate != null) {
-        val date = Date(selectedEndDate!!)
-        val formattedDate = SimpleDateFormat("MM-dd-yyyy", Locale.getDefault()).format(date)
-        selectedEndDateText = formattedDate
-        onItemValueChange(albumUiState.copy(endDateOfActivity = selectedEndDateText))
-    } else {
-        selectedEndDateText = ""
-    }
     if (chooseEndOfEvent) {
+        var showEndDatePicker by remember { mutableStateOf(false) }
+        var selectedEndDate by rememberSaveable { mutableStateOf<Long?>(null) }
+
+        var selectedEndDateText: String = ""
+        if (selectedEndDate != null) {
+            val formattedEndDate =
+                SimpleDateFormat("MM-dd-yyyy", Locale.getDefault()).format(Date(selectedEndDate!!))
+            selectedEndDateText = formattedEndDate
+            onItemValueChange(albumUiState.copy(endDateOfActivity = selectedEndDateText))
+        } else {
+            selectedEndDateText = ""
+        }
+
+        val endDatePickerState = rememberDatePickerState(
+            selectableDates = object : SelectableDates {
+                override fun isSelectableDate(utcTimeMillis: Long): Boolean {
+                    return utcTimeMillis > (selectedDate
+                        ?: Long.MAX_VALUE) // Разрешаем только даты после выбранной
+                }
+            }
+        )
 
         TextFieldForDates(
             labelForDate = R.string.end_date_of_event_field,
             selectedDateText = selectedEndDateText,
-            onIconClick = { showDatePicker = !showDatePicker },
-            selected = showDatePicker,
-            onDismiss = { showDatePicker = false },
+            onIconClick = { showEndDatePicker = !showEndDatePicker },
+            selected = showEndDatePicker,
+            onDismiss = { showEndDatePicker = false },
             onSave = {
-                selectedEndDate = datePickerState.selectedDateMillis
-
-                showDatePicker = false
+                selectedEndDate = endDatePickerState.selectedDateMillis
+                showEndDatePicker = false
             },
-            datePickerState = datePickerState
+            datePickerState = endDatePickerState,
         )
 
         MySpacer()
-        if (selectedEndDateText != "") {
+
+        if (selectedEndDateText.isNotEmpty()) {
             TextButton(
                 onClick = {
                     onItemValueChange(albumUiState.copy(endDateOfActivity = ""))
                     selectedEndDate = null
-                },
+                }
             ) {
-                Text(
-                    text = stringResource(R.string.clear_date_time),
-                )
+                Text(text = stringResource(R.string.clear_date_time))
             }
         }
-
     }
-
-
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -423,9 +458,8 @@ fun TextFieldForDates(
     selected: Boolean = false,
     onDismiss: () -> Unit,
     onSave: () -> Unit,
-    datePickerState: DatePickerState
+    datePickerState: DatePickerState,
 ) {
-
     OutlinedTextField(
         value = selectedDateText,
         onValueChange = { },
@@ -471,7 +505,7 @@ fun TextFieldForDates(
         ) {
             DatePicker(
                 state = datePickerState,
-                showModeToggle = false
+                showModeToggle = false,
             )
         }
     }
@@ -504,7 +538,7 @@ fun EnterAlbumDetailsPreviewDark() {
 @Preview(showBackground = true)
 @Composable
 fun HowImageDisplay() {
-    var imageUri: Painter = painterResource(id = R.drawable._840x)
+    val imageUri: Painter = painterResource(id = R.drawable._840x)
     AlbumAppTheme {
         Column(modifier = Modifier.fillMaxSize()) {
             Box(
