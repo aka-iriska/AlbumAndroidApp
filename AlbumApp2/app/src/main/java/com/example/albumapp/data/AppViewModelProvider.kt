@@ -8,7 +8,7 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.albumapp.AppApplication
 import com.example.albumapp.ui.screens.createNewAlbum.AlbumsViewModel
-import com.example.albumapp.ui.screens.createNewPages.CreateNewPagesViewModel
+import com.example.albumapp.ui.screens.editPagesInAlbum.EditPagesViewModel
 import com.example.albumapp.ui.screens.currentAlbum.CurrentAlbumViewModel
 import com.example.albumapp.ui.screens.editAlbumInGallery.EditAlbumInGalleryViewModel
 import com.example.albumapp.ui.screens.home.HomeViewModel
@@ -37,7 +37,7 @@ object AppViewModelProvider {
             )
         }
         initializer {
-            CreateNewPagesViewModel(
+            EditPagesViewModel(
                 this.createSavedStateHandle(),
                 inventoryApplication().container.albumsRepository
             )
@@ -47,7 +47,7 @@ object AppViewModelProvider {
 
 /**
  * Extension function to queries for [Application] object and returns an instance of
- * [InventoryApplication].
+ * [AppApplication].
  */
 fun CreationExtras.inventoryApplication(): AppApplication =
     (this[AndroidViewModelFactory.APPLICATION_KEY] as AppApplication)
