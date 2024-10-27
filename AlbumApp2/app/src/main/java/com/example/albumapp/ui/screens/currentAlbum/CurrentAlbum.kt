@@ -1,6 +1,5 @@
 package com.example.albumapp.ui.screens.currentAlbum
 
-import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -18,7 +17,6 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Edit
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -57,8 +55,8 @@ import kotlin.math.min
 object CurrentAlbumDestination : NavigationDestination {
     override val route = "chosen_album"
     override val titleRes = R.string.home_screen_title
-    const val AlbumIdArg = "itemId"
-    val routeWithArgs = "$route/{$AlbumIdArg}"
+    const val ALBUM_ID_ARG = "itemId"
+    val routeWithArgs = "$route/{$ALBUM_ID_ARG}"
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -195,7 +193,7 @@ fun CurrentAlbumBody(
                                     horizontalAlignment = Alignment.CenterHorizontally,
                                     verticalArrangement = Arrangement.Center
                                 ) {
-                                    CircularProgressIndicator()
+                                    //CircularProgressIndicator()
                                 }
                             }
                         }

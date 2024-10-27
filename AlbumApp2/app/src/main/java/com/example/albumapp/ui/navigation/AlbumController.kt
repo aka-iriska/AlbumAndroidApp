@@ -25,8 +25,8 @@ import com.example.albumapp.SplashScreen
 import com.example.albumapp.SplashScreenDestination
 import com.example.albumapp.ui.screens.createNewAlbum.CreateNewAlbumDestination
 import com.example.albumapp.ui.screens.createNewAlbum.CreateNewAlbumInGallery
-import com.example.albumapp.ui.screens.createNewPages.CreateNewPages
-import com.example.albumapp.ui.screens.createNewPages.CreateNewPagesDestination
+import com.example.albumapp.ui.screens.editPagesInAlbum.CreateNewPages
+import com.example.albumapp.ui.screens.editPagesInAlbum.CreateNewPagesDestination
 import com.example.albumapp.ui.screens.currentAlbum.CurrentAlbum
 import com.example.albumapp.ui.screens.currentAlbum.CurrentAlbumDestination
 import com.example.albumapp.ui.screens.editAlbumInGallery.EditAlbumInGallery
@@ -60,7 +60,7 @@ fun AlbumApp(
         }
         composable(
             route = EditAlbumInGalleryDestination.routeWithArgs,
-            arguments = listOf(navArgument(EditAlbumInGalleryDestination.AlbumIdArg) {
+            arguments = listOf(navArgument(EditAlbumInGalleryDestination.ALBUM_ID_ARG) {
                 type = NavType.IntType
             })
         )
@@ -69,7 +69,7 @@ fun AlbumApp(
         }
         composable(
             route = CurrentAlbumDestination.routeWithArgs,
-            arguments = listOf(navArgument(CurrentAlbumDestination.AlbumIdArg) {
+            arguments = listOf(navArgument(CurrentAlbumDestination.ALBUM_ID_ARG) {
                 type = NavType.IntType
             })
         ) {
@@ -83,7 +83,7 @@ fun AlbumApp(
         }
         composable(
             route = CreateNewPagesDestination.routeWithArgs,
-            arguments = listOf(navArgument(CreateNewPagesDestination.AlbumIdArg) {
+            arguments = listOf(navArgument(CreateNewPagesDestination.ALBUM_ID_ARG) {
                 type = NavType.IntType
             })
         ) {
@@ -104,10 +104,10 @@ fun AlbumApp(
 @Composable
 fun AppTopBar(
     title: String,
+    modifier: Modifier = Modifier,
     scrollBehavior: TopAppBarScrollBehavior? = null,
     navigateBack: () -> Unit = {},
-    canNavigateBack: Boolean = true,
-    modifier: Modifier = Modifier
+    canNavigateBack: Boolean = true
 ) {
     Surface(shadowElevation = 10.dp, modifier = modifier) {
         CenterAlignedTopAppBar(
