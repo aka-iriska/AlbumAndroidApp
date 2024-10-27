@@ -2,7 +2,6 @@ package com.example.albumapp.utils
 
 import android.content.Context
 import android.net.Uri
-import android.util.Log
 import com.example.albumapp.ui.screens.createNewAlbum.ImageSavingException
 import java.io.File
 import java.io.IOException

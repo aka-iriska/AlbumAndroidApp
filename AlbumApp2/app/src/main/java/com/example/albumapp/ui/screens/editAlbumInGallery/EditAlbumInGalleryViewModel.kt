@@ -55,6 +55,7 @@ class EditAlbumInGalleryViewModel(
             title.isNotBlank()
         }
     }
+
     /*todo что с фото*/
     suspend fun updateAlbum(context: Context) {
         if (validateInput()) {

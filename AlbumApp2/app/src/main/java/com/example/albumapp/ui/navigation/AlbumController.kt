@@ -25,12 +25,12 @@ import com.example.albumapp.SplashScreen
 import com.example.albumapp.SplashScreenDestination
 import com.example.albumapp.ui.screens.createNewAlbum.CreateNewAlbumDestination
 import com.example.albumapp.ui.screens.createNewAlbum.CreateNewAlbumInGallery
-import com.example.albumapp.ui.screens.editPagesInAlbum.CreateNewPages
-import com.example.albumapp.ui.screens.editPagesInAlbum.CreateNewPagesDestination
 import com.example.albumapp.ui.screens.currentAlbum.CurrentAlbum
 import com.example.albumapp.ui.screens.currentAlbum.CurrentAlbumDestination
 import com.example.albumapp.ui.screens.editAlbumInGallery.EditAlbumInGallery
 import com.example.albumapp.ui.screens.editAlbumInGallery.EditAlbumInGalleryDestination
+import com.example.albumapp.ui.screens.editPagesInAlbum.CreateNewPages
+import com.example.albumapp.ui.screens.editPagesInAlbum.CreateNewPagesDestination
 import com.example.albumapp.ui.screens.home.HomeDestination
 import com.example.albumapp.ui.screens.home.HomeScreen
 

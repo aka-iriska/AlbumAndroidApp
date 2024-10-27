@@ -25,7 +25,8 @@ class EditPagesViewModel(
 ) : ViewModel() {
     var pagesUiState by mutableStateOf(CurrentAlbumUiState())
         private set
-    private val albumId: Int = checkNotNull(savedStateHandle[CreateNewPagesDestination.ALBUM_ID_ARG])
+    private val albumId: Int =
+        checkNotNull(savedStateHandle[CreateNewPagesDestination.ALBUM_ID_ARG])
     private var elementIdCounter = -2
     private var deletedElements = mutableListOf<Int>()
 
@@ -42,9 +43,9 @@ class EditPagesViewModel(
         }
     }
 
-   /* companion object {
-        private const val TIMEOUT_MILLIS = 5_000L
-    }*/
+    /* companion object {
+         private const val TIMEOUT_MILLIS = 5_000L
+     }*/
 
     /*fun updatePagesToShow(pages: Int) {
         pagesUiState = pagesUiState.copy(pagesToShow = pages)

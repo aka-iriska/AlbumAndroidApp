@@ -67,6 +67,7 @@ dependencies {
     implementation(libs.androidx.ui.text.google.fonts)
     implementation(libs.androidx.appcompat.resources)
     implementation(libs.androidx.foundation.android)
+    implementation(libs.material)
     ksp("androidx.room:room-compiler:${rootProject.extra["room_version"]}")
     implementation("androidx.room:room-ktx:${rootProject.extra["room_version"]}")
     // for viewModel

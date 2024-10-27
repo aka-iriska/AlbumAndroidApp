@@ -38,9 +38,9 @@ class CurrentAlbumViewModel(
         }
     }
 
-/*    companion object {
-        private const val TIMEOUT_MILLIS = 5_000L
-    }*/
+    /*    companion object {
+            private const val TIMEOUT_MILLIS = 5_000L
+        }*/
 
     fun updateCurrentPage(newCurrentPage: Int) {
         pagesUiState = pagesUiState.copy(currentPage = newCurrentPage)
@@ -50,6 +50,7 @@ class CurrentAlbumViewModel(
         return albumsRepository.getAlbumTitleForDetailed(albumId)
     }
 }
+
 // SQLite не поддерживает прямое создание кластерного индекса
 // добавить обычный индекс для столбца, но данные физически не будут перемещены в порядке индекса.
 // foreign key автоматически не проиндексирован
