@@ -1,7 +1,6 @@
 package com.example.albumapp.ui.screens.editAlbumInGallery
 
 import android.content.Context
-import android.net.Uri
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -10,14 +9,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.albumapp.data.AlbumsRepository
 import com.example.albumapp.ui.screens.createNewAlbum.AlbumsUiState
-import com.example.albumapp.ui.screens.createNewAlbum.ImageSavingException
 import com.example.albumapp.ui.screens.createNewAlbum.toAlbumDbClass
 import com.example.albumapp.ui.screens.createNewAlbum.toAlbumsUiState
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import java.io.File
-import java.io.IOException
 
 class EditAlbumInGalleryViewModel(
     savedStateHandle: SavedStateHandle,
@@ -26,7 +22,7 @@ class EditAlbumInGalleryViewModel(
     var albumsUiState by mutableStateOf(AlbumsUiState())
         private set
     private val albumId: Int =
-        checkNotNull(savedStateHandle[EditAlbumInGalleryDestination.AlbumIdArg])
+        checkNotNull(savedStateHandle[EditAlbumInGalleryDestination.ALBUM_ID_ARG])
 
     init {
         viewModelScope.launch {
@@ -56,35 +52,10 @@ class EditAlbumInGalleryViewModel(
 
     private fun validateInput(uiState: AlbumsUiState = albumsUiState): Boolean {
         return with(uiState) {
-            title.isNotBlank() //&& price.isNotBlank() && quantity.isNotBlank()
+            title.isNotBlank()
         }
     }
-
-    fun saveAlbumCoverLocally(context: Context, albumId: Int): Result<Uri> {
-
-        val uri: Uri
-        return try {
-            uri = if (albumsUiState.imageCover.isNotEmpty()) {
-                Uri.parse(albumsUiState.imageCover)
-            } else {
-                throw IllegalArgumentException("Image cover URI is empty") // Throw exception for empty URI
-            }
-            val contentResolver = context.contentResolver
-            val inputStream = contentResolver.openInputStream(uri)
-            val file = File(context.filesDir, "album_cover_$albumId.jpg")
-
-            inputStream?.use { input ->
-                file.outputStream().use { output ->
-                    input.copyTo(output)
-                }
-            }
-
-            Result.success(Uri.fromFile(file))
-        } catch (e: IOException) {
-            Result.failure(ImageSavingException("Failed to save image: ${e.message}"))
-        }
-    }
-
+    /*todo что с фото*/
     suspend fun updateAlbum(context: Context) {
         if (validateInput()) {
             /*if (albumsUiState.imageCover.isNotEmpty()) {
