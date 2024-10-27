@@ -1,5 +1,6 @@
 package com.example.albumapp.ui.components.forNewPage
 
+import SureChoice
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,7 +20,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import com.example.albumapp.R
-import com.example.albumapp.ui.components.forHome.SureChoice
 import com.example.albumapp.ui.theme.AlbumAppTheme
 
 @Composable
@@ -51,6 +51,7 @@ fun SaveChangesModal(
                         onYesClick =
                         saveChanges,
                         onCancelClick = onDismissRequest,
+                        onCancelClickFlag = true,
                         onNoClick = onNavigateBack,
                         text = "Do you want to save changes?",
                     )
