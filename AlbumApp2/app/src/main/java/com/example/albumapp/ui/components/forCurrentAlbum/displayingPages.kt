@@ -6,8 +6,14 @@ import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -17,6 +23,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
@@ -53,6 +60,10 @@ fun DisplayElement(
     } // для увеличения
     var elementSize by remember { mutableStateOf(IntSize.Zero) } // Размер элемента
 
+    val elementHeight = (scale).dp
+    if (element.id == 8) {
+        Log.d("position", position.toString() + scale.toString())
+    }
     LaunchedEffect(pageSize, element.offsetX, element.offsetY) {
         position = Offset(element.offsetX * pageSize.width, element.offsetY * pageSize.height)
         rotation = element.rotation
@@ -65,7 +76,8 @@ fun DisplayElement(
                 position.x.toInt(), position.y.toInt()
             )
         }
-        .size((scale).dp)
+        .width(elementHeight)
+
     ) {
         when (element.type) {
             ElementType.STICKER -> {
@@ -78,9 +90,11 @@ fun DisplayElement(
                 if (painter.state is AsyncImagePainter.State.Error) {
                     Log.e("tag", "Error loading SVG")
                 }
-                Image(painter = painter,
+                Image(
+                    painter = painter,
                     contentDescription = "element",
                     modifier = Modifier
+                        .height(elementHeight)
                         .fillMaxSize()
                         .onSizeChanged { size ->
                             elementSize = size // Запоминаем фактический размер стикера
@@ -89,7 +103,8 @@ fun DisplayElement(
                             scaleX = 1f//scale/pageSize.width
                             scaleY = 1f//scale/pageSize.width
                             rotationZ = rotation
-                        })
+                        }
+                )
             }
 
             ElementType.IMAGE -> {
@@ -101,6 +116,7 @@ fun DisplayElement(
                         painter = painter,
                         contentDescription = "Image",
                         modifier = Modifier
+                            .height(elementHeight)
                             .fillMaxSize()
                             .onSizeChanged { size ->
                                 elementSize = size // Запоминаем фактический размер стикера
@@ -115,7 +131,25 @@ fun DisplayElement(
             }
 
             ElementType.DEFAULT -> {}
-            ElementType.TEXT_FIELD -> {}
+            ElementType.TEXT_FIELD -> {
+                OutlinedTextField(
+                    value = element.resource,
+                    readOnly = true,
+                    onValueChange = {},
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn()
+                        .padding(10.dp) // Отступы внутри TextField
+                    ,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedContainerColor = Color.Transparent,
+                        unfocusedContainerColor = Color.Transparent,
+                        disabledContainerColor = Color.Transparent,
+                        focusedBorderColor = Color.Transparent,
+                        unfocusedBorderColor = Color.Transparent
+                    )
+                )
+            }
         }
     }
 }

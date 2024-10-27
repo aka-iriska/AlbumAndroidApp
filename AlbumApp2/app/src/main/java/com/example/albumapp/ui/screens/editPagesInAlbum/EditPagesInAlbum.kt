@@ -1,5 +1,6 @@
-package com.example.albumapp.ui.screens.createNewPages
+package com.example.albumapp.ui.screens.editPagesInAlbum
 
+import SureChoice
 import android.content.Context
 import android.net.Uri
 import android.util.Log
@@ -13,6 +14,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -50,9 +52,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.focus.FocusManager
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.IntSize
@@ -66,7 +71,6 @@ import coil.request.ImageRequest
 import com.example.albumapp.R
 import com.example.albumapp.data.AppViewModelProvider
 import com.example.albumapp.ui.components.forCountPages.ShowActivePageByRadioButton
-import com.example.albumapp.ui.components.forHome.SureChoice
 import com.example.albumapp.ui.components.forNewPage.DraggableSticker
 import com.example.albumapp.ui.components.forNewPage.SaveChangesModal
 import com.example.albumapp.ui.navigation.AppTopBar
@@ -81,8 +85,8 @@ import kotlin.math.min
 object CreateNewPagesDestination : NavigationDestination {
     override val route = "create_new_pages_in_album"
     override val titleRes = R.string.create_new_pages_in_album
-    const val AlbumIdArg = "itemId"
-    val routeWithArgs = "$route/{$AlbumIdArg}"
+    const val ALBUM_ID_ARG = "itemId"
+    val routeWithArgs = "$route/{$ALBUM_ID_ARG}"
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -90,7 +94,7 @@ object CreateNewPagesDestination : NavigationDestination {
 fun CreateNewPages(
     modifier: Modifier = Modifier,
     navigateBack: (Int) -> Unit = {},
-    albumViewModel: CreateNewPagesViewModel = viewModel(factory = AppViewModelProvider.Factory),
+    albumViewModel: EditPagesViewModel = viewModel(factory = AppViewModelProvider.Factory),
 ) {
     val albumUiState = albumViewModel.pagesUiState
     val context = LocalContext.current
@@ -100,6 +104,7 @@ fun CreateNewPages(
     val openAlertDialog = remember { mutableStateOf(false) }
     val coroutineScope = rememberCoroutineScope()
 
+    val focusManager = LocalFocusManager.current
 
     Scaffold(topBar = {
         AppTopBar(title = "New pages in album", navigateBack = {
@@ -109,7 +114,16 @@ fun CreateNewPages(
                 navigateBack(albumUiState.albumId)
             }
         })
-    }) { innerPadding ->
+    },
+        modifier = Modifier
+            .pointerInput(Unit) {
+                // Обработчик нажатий на Box
+                detectTapGestures(onTap = {
+                    // Убираем фокус с текущего элемента
+                    focusManager.clearFocus()
+                })
+            }
+    ) { innerPadding ->
 
         BackHandler {
             if (albumUiState.changed) {
@@ -117,6 +131,7 @@ fun CreateNewPages(
             } else {
                 navigateBack(albumUiState.albumId)
             }
+            focusManager.clearFocus()
         }
         when {
             openAlertDialog.value -> {
@@ -140,6 +155,7 @@ fun CreateNewPages(
         CreateNewPagesBody(
             stickersList = stickerNames,
             context = context,
+            focusManager = focusManager,
             modifier = modifier.padding(innerPadding),
             onUpdate = albumViewModel::updateUiState,
             albumUiState = albumUiState,
@@ -156,6 +172,7 @@ fun CreateNewPages(
 fun CreateNewPagesBody(
     stickersList: List<String>,
     context: Context,
+    focusManager: FocusManager,
     modifier: Modifier = Modifier,
     onUpdate: (Int, PageElement, Int) -> Unit,
     albumUiState: CurrentAlbumUiState,
@@ -165,16 +182,16 @@ fun CreateNewPagesBody(
     updateCurrentPage: (Int) -> Unit
 
 ) {
-    var addedElements = albumUiState.pagesMap
+    val addedElements = albumUiState.pagesMap
     var stickersPressed by remember { mutableStateOf(false) }
     var settingsPressed by remember { mutableStateOf(false) }
-    var pageNumber = albumUiState.pageNumber
+    val pageNumber = albumUiState.pageNumber
     var pageSize by remember { mutableStateOf(IntSize.Zero) }
 
     /**
      * For Image Picker
      */
-//    var imageUri by rememberSaveable { mutableStateOf<Uri?>(null) }
+
     val picker =
         rememberLauncherForActivityResult(contract = ActivityResultContracts.PickVisualMedia()) { uri: Uri? ->
             if (uri != null) {
@@ -185,7 +202,7 @@ fun CreateNewPagesBody(
                         type = ElementType.IMAGE,
                         offsetY = 0f / pageSize.width,
                         offsetX = 0f / pageSize.height,
-                        scale = 0.1f,// / min(pageSize.width, pageSize.height),
+                        scale = 0.3f,// / min(pageSize.width, pageSize.height),
                         rotation = 0f,
                         resource = uri.toString()
                     ),
@@ -248,7 +265,7 @@ fun CreateNewPagesBody(
                                         type = ElementType.STICKER,
                                         offsetY = 0f / pageSize.width,
                                         offsetX = 0f / pageSize.height,
-                                        scale = 0.1f,// / min(pageSize.width, pageSize.height),
+                                        scale = 0.2f,// / min(pageSize.width, pageSize.height),
                                         rotation = 0f,
                                         resource = stickerName
                                     ),
@@ -288,7 +305,21 @@ fun CreateNewPagesBody(
                  * for text fields
                  */
                 item {
-                    IconButton(onClick = {}) {
+                    IconButton(
+                        onClick = {
+                            onUpdate(
+                                albumUiState.currentPage,
+                                PageElement(
+                                    type = ElementType.TEXT_FIELD,
+                                    offsetY = 0f / pageSize.width,
+                                    offsetX = 0f / pageSize.height,
+                                    scale = 0.3f,// / min(pageSize.width, pageSize.height),
+                                    rotation = 0f,
+                                    resource = ""
+                                ),
+                                -1
+                            )
+                        }) {
                         Icon(
                             painterResource(R.drawable.add_text_fields2),
                             modifier = Modifier.stickerChoice(),
@@ -343,64 +374,82 @@ fun CreateNewPagesBody(
 
         if (pageNumber != 0) {
             Column(
-                modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.Center
+                modifier = Modifier.fillMaxSize(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
             ) {
                 var isNearEdge by remember { mutableStateOf(false) } // Для подсветки всей `Column`
                 val paddingSizeForPage = (min(pageSize.height, pageSize.width) / 22).dp
                 val pagerState = rememberPagerState(pageCount = { pageNumber })
-                HorizontalPager(state = pagerState) { pageIndex ->
+                HorizontalPager(
+                    state = pagerState,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f)
+                ) { pageIndex ->
                     LaunchedEffect(pagerState.settledPage) {
                         updateCurrentPage(pagerState.settledPage + 1)
                     }
-                    Column(
+                    Box(
                         modifier = Modifier
-                            .aspectRatio(2f / 3f)
-                            .padding(dimensionResource(id = R.dimen.padding_from_edge)) // padding до shadow
-                            .shadow(
-                                10.dp,
-                                shape = RoundedCornerShape(8.dp)
-                            ) // shadow с закруглением
-                            .clip(RoundedCornerShape(8.dp)) // Clip для правильной тени
-                            .background(MaterialTheme.colorScheme.surfaceContainerHighest)
+                            .fillMaxWidth(),
+                        contentAlignment = Alignment.Center // Центрирование содержимого внутри Box
                     ) {
-                        if (pagerState.settledPage == pageIndex && albumUiState.currentPage == pageIndex + 1) {
-                            updateCurrentPage(pagerState.settledPage + 1)
-                            CanvasBody(
-                                pageSize = pageSize,
-                                elements = addedElements.getOrDefault(
-                                    albumUiState.currentPage,
-                                    emptyList()
-                                ),
-                                onUpdate = onUpdate,
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .border(
-                                        width = paddingSizeForPage,
-                                        color = if (isNearEdge) Color.Red.copy(alpha = 0.3f) else Color.Unspecified,
-                                        shape = RoundedCornerShape(8.dp)
-                                    )
-                                    .padding(paddingSizeForPage)
-                                    .onSizeChanged { newSize ->
-                                        pageSize = newSize
-                                    },
-                                comeToTheEdge = { isNearEdge = it },
-                                onElementRemove = onDelete,
-                                onCancelDelete = onCancelDelete,
-                                currentPage = albumUiState.currentPage
-                            )
-                        } /*else {
-                            Column(
-                                modifier = Modifier.fillMaxSize(),
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.Center
-                            ) { CircularProgressIndicator() }
-
-                        }*/
+                        Column(
+                            modifier = Modifier
+                                .aspectRatio(2f / 3f)
+                                .padding(dimensionResource(id = R.dimen.padding_from_edge)) // padding до shadow
+                                .shadow(
+                                    10.dp,
+                                    shape = RoundedCornerShape(8.dp)
+                                ) // shadow с закруглением
+                                .clip(RoundedCornerShape(8.dp)) // Clip для правильной тени
+                                .background(MaterialTheme.colorScheme.surfaceContainerHighest),
+                            verticalArrangement = Arrangement.Center,
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            if (pagerState.settledPage == pageIndex && albumUiState.currentPage == pageIndex + 1) {
+                                updateCurrentPage(pagerState.settledPage + 1)
+                                CanvasBody(
+                                    pageSize = pageSize,
+                                    elements = addedElements.getOrDefault(
+                                        albumUiState.currentPage,
+                                        emptyList()
+                                    ),
+                                    onUpdate = onUpdate,
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .border(
+                                            width = paddingSizeForPage,
+                                            color = if (isNearEdge) Color.Red.copy(alpha = 0.3f) else Color.Unspecified,
+                                            shape = RoundedCornerShape(8.dp)
+                                        )
+                                        .padding(paddingSizeForPage)
+                                        .onSizeChanged { newSize ->
+                                            pageSize = newSize
+                                        },
+                                    comeToTheEdge = { isNearEdge = it },
+                                    onElementRemove = onDelete,
+                                    onCancelDelete = onCancelDelete,
+                                    currentPage = albumUiState.currentPage,
+                                    focusManager = focusManager
+                                )
+                            } else {
+                                Column(
+                                    modifier = Modifier.fillMaxSize(),
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    verticalArrangement = Arrangement.Center
+                                ) {
+                                    //CircularProgressIndicator()
+                                }
+                            }
+                        }
                     }
                 }
                 ShowActivePageByRadioButton(
                     pagerState,
-                    Modifier.align(Alignment.CenterHorizontally)
+                    Modifier
+                        .align(Alignment.CenterHorizontally)
                 )
             }
         }
@@ -416,19 +465,23 @@ fun CanvasBody(
     onElementRemove: (Int, Int) -> Unit,
     comeToTheEdge: (Boolean) -> Unit,
     onCancelDelete: (Int, Int, Int, Int, IntSize) -> Unit,
-    currentPage: Int
+    currentPage: Int,
+    focusManager: FocusManager
 ) {
+    val sortedElements = elements.sortedBy { it.zIndex }
+
     var elementToRemove by remember { mutableStateOf<Pair<Int, Int>?>(null) } // Текущий элемент для удаления
     val additionalColor: Color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
     var elementSize by remember { mutableStateOf(IntSize.Zero) }
     Box(
         modifier = modifier
     ) {
-        elements.forEach { element ->
+        sortedElements.forEach { element ->
             DraggableSticker(
                 pageNumber = currentPage,
                 elementName = element.resource,
                 context = LocalContext.current,
+                focusManager = focusManager,
                 pageSize = pageSize,
                 element = element,
                 onElementUpdate = onUpdate,
@@ -472,16 +525,16 @@ fun CanvasBody(
                                 elementToRemove = null
 
                             },
-                            /*todo исправить cancel, чтобы не показывался*/
-                            onCancelClick = {},
                             onNoClick = {
-                                onCancelDelete(
-                                    elementToRemove!!.first,
-                                    elementToRemove!!.second,
-                                    pageSize.width,
-                                    pageSize.height,
-                                    elementSize
-                                )
+                                if (elementSize.width <= pageSize.width && elementSize.height <= pageSize.height) {
+                                    onCancelDelete(
+                                        elementToRemove!!.first,
+                                        elementToRemove!!.second,
+                                        pageSize.width,
+                                        pageSize.height,
+                                        elementSize
+                                    )
+                                }
                                 comeToTheEdge(false)
                                 elementToRemove = null
                             },
