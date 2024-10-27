@@ -7,7 +7,7 @@ import androidx.room.RoomDatabase
 import com.example.albumapp.ui.screens.createNewAlbum.Album
 import com.example.albumapp.ui.screens.currentAlbum.AlbumDetailed
 
-@Database(entities = [Album::class, AlbumDetailed::class], version = 8, exportSchema = false)
+@Database(entities = [Album::class, AlbumDetailed::class], version = 10, exportSchema = false)
 abstract class AlbumsDataBase : RoomDatabase() {
     abstract fun albumsDao(): AlbumsDAO
 

@@ -27,8 +27,8 @@ interface AlbumsDAO {
     @Delete
     suspend fun deleteAlbum(album: Album)
 
-    @Delete
-    suspend fun deleteAlbumDetails(albumDetails: AlbumDetailed)
+    @Query("DELETE FROM albumDetailsTable WHERE id = :albumDetailsId")
+    suspend fun deleteAlbumDetails(albumDetailsId: Int)
 
     @Query("SELECT * from albumsTable WHERE id = :id")
     fun getAlbum(id: Int): Flow<Album>

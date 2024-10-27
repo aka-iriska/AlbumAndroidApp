@@ -19,8 +19,8 @@ class OfflineAlbumsRepository(private val albumDao: AlbumsDAO) : AlbumsRepositor
         albumDao.insertAlbumDetails(albumDetails)
 
     override suspend fun deleteAlbum(album: Album) = albumDao.deleteAlbum(album)
-    override suspend fun deleteAlbumDetails(albumDetails: AlbumDetailed) =
-        albumDao.deleteAlbumDetails(albumDetails)
+    override suspend fun deleteAlbumDetails(albumDetailsId: Int) =
+        albumDao.deleteAlbumDetails(albumDetailsId)
 
     override suspend fun updateAlbum(album: Album) = albumDao.update(album)
     override suspend fun updateAlbumDetails(albumDetails: AlbumDetailed) =
