@@ -1,4 +1,4 @@
-package com.example.albumapp.ui.screens.createNewPages
+package com.example.albumapp.ui.screens.editPagesInAlbum
 
 import android.content.Context
 import android.util.Log
@@ -20,13 +20,14 @@ import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.launch
 import okhttp3.internal.toImmutableList
 
-class CreateNewPagesViewModel(
+class EditPagesViewModel(
     savedStateHandle: SavedStateHandle, private val albumsRepository: AlbumsRepository
 ) : ViewModel() {
     var pagesUiState by mutableStateOf(CurrentAlbumUiState())
         private set
-    private val albumId: Int = checkNotNull(savedStateHandle[CreateNewPagesDestination.AlbumIdArg])
-    private var elementIdCounter = 1
+    private val albumId: Int = checkNotNull(savedStateHandle[CreateNewPagesDestination.ALBUM_ID_ARG])
+    private var elementIdCounter = -2
+    private var deletedElements = mutableListOf<Int>()
 
     init {
         viewModelScope.launch {
@@ -37,20 +38,17 @@ class CreateNewPagesViewModel(
                     pagesUiState = albumDetailedListToUiState(albumDetails, isEditing = true)
                     pagesUiState =
                         pagesUiState.copy(pageNumber = pagesUiState.pagesMap.keys.maxOrNull() ?: 0)
-                    if (pagesUiState.pagesMap.isNotEmpty())
-                        elementIdCounter += pagesUiState.pagesMap.values.flatten()
-                            .maxOf { it.id }
                 }
         }
     }
 
-    companion object {
+   /* companion object {
         private const val TIMEOUT_MILLIS = 5_000L
-    }
+    }*/
 
-    fun updatePagesToShow(pages: Int) {
+    /*fun updatePagesToShow(pages: Int) {
         pagesUiState = pagesUiState.copy(pagesToShow = pages)
-    }
+    }*/
 
     fun addNewPage() {
         pagesUiState = pagesUiState.copy(pageNumber = pagesUiState.pageNumber + 1)
@@ -61,13 +59,12 @@ class CreateNewPagesViewModel(
     }
 
     fun updateUiState(pageNumber: Int, element: PageElement, elementId: Int = -1) {
-        Log.d("before update", "${pagesUiState.pagesMap}")
         if (pageNumber != 0) {
-            var newPagesMap = pagesUiState.pagesMap.toMutableMap()
+            val newPagesMap = pagesUiState.pagesMap.toMutableMap()
             // Получаем список элементов для страницы или создаем новый пустой список, если его нет
             val newPageElementsList = newPagesMap[pageNumber]?.toMutableList() ?: mutableListOf()
             if (elementId == -1) {
-                val uniqueElement = element.copy(id = elementIdCounter++)
+                val uniqueElement = element.copy(id = elementIdCounter--)
                 // Добавляем новый элемент на страницу
                 newPageElementsList.add(uniqueElement)
             } else {
@@ -87,6 +84,7 @@ class CreateNewPagesViewModel(
     }
 
     fun deleteElement(pageNumber: Int, elementId: Int) {
+        Log.d("delete", elementId.toString())
         // Получаем текущий список элементов на странице с номером pageNumber
         val currentPageElements = pagesUiState.pagesMap[pageNumber]?.toMutableList()
 
@@ -101,6 +99,7 @@ class CreateNewPagesViewModel(
                     this[pageNumber] = updatedElements
                 }
             )
+            deletedElements.add(elementId)
         }
     }
 
@@ -109,7 +108,7 @@ class CreateNewPagesViewModel(
         elementId: Int,
         pageWidth: Int,
         pageHeight: Int,
-        stickerSize: IntSize
+        stickerSize: IntSize /*todo исправить на element*/
     ) {
         val currentPageElements = pagesUiState.pagesMap[pageNumber]?.toMutableList()
 
@@ -125,6 +124,7 @@ class CreateNewPagesViewModel(
                 return@forEachIndexed
             }
         }
+
         currentPageElements?.let {
             val updatesPageElements: List<PageElement> = currentPageElements.toImmutableList()
             pagesUiState = pagesUiState.copy(
@@ -168,7 +168,9 @@ class CreateNewPagesViewModel(
                 }
             }
         }
-
+        deletedElements.forEach { elementId ->
+            albumsRepository.deleteAlbumDetails(elementId)
+        }
     }
 }
 
