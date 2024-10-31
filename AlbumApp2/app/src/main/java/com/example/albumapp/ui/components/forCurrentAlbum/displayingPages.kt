@@ -11,7 +11,11 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.runtime.Composable
@@ -27,9 +31,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImagePainter
 import coil.compose.rememberAsyncImagePainter
 import coil.decode.SvgDecoder
@@ -37,6 +43,8 @@ import coil.request.ImageRequest
 import com.example.albumapp.ui.screens.currentAlbum.ElementType
 import com.example.albumapp.ui.screens.currentAlbum.PageElement
 import com.example.albumapp.ui.screens.currentAlbum.stickersMap
+import com.example.albumapp.ui.theme.bodyFontFamily
+import kotlin.math.min
 
 @Composable
 fun DisplayElement(
@@ -53,21 +61,35 @@ fun DisplayElement(
         )
     } // для перемещения
     var rotation by remember { mutableFloatStateOf(element.rotation) } // для вращения
+
+    val orienter = min(pageSize.width, pageSize.height)
     var scale by remember {
         mutableFloatStateOf(
-            element.scale * pageSize.width
+            element.scale * orienter
         )
     } // для увеличения
-    var elementSize by remember { mutableStateOf(IntSize.Zero) } // Размер элемента
+    if (element.resource=="scotch"){Log.d("Scsize", "$scale, ${pageSize.width}")}
 
     val elementHeight = (scale).dp
-    if (element.id == 8) {
-        Log.d("position", position.toString() + scale.toString())
-    }
+
     LaunchedEffect(pageSize, element.offsetX, element.offsetY) {
         position = Offset(element.offsetX * pageSize.width, element.offsetY * pageSize.height)
         rotation = element.rotation
-        scale = element.scale * pageSize.width
+        scale = element.scale * orienter
+    }
+
+    var fontSize by remember { mutableFloatStateOf(16f) }
+
+    val primaryColor = MaterialTheme.colorScheme.primary
+    var colorForTextField: Color by remember { mutableStateOf<Color>(primaryColor) }
+
+    var textForTextField by remember { mutableStateOf("") }
+
+    if (element.type == ElementType.TEXT_FIELD){
+        val (fontSizeString, colorString, text) = element.resource.split("/")
+        fontSize = fontSizeString.toFloat()
+        colorForTextField = Color(android.graphics.Color.parseColor(colorString))
+        textForTextField = text
     }
 
     Box(modifier = Modifier
@@ -76,7 +98,12 @@ fun DisplayElement(
                 position.x.toInt(), position.y.toInt()
             )
         }
-        .width(elementHeight)
+        .wrapContentSize(unbounded = true)
+        .graphicsLayer {
+            scaleX = 1f//scale/pageSize.width
+            scaleY = 1f//scale/pageSize.width
+            rotationZ = rotation
+        }
 
     ) {
         when (element.type) {
@@ -94,16 +121,8 @@ fun DisplayElement(
                     painter = painter,
                     contentDescription = "element",
                     modifier = Modifier
-                        .height(elementHeight)
+                        .size(elementHeight)
                         .fillMaxSize()
-                        .onSizeChanged { size ->
-                            elementSize = size // Запоминаем фактический размер стикера
-                        }
-                        .graphicsLayer {
-                            scaleX = 1f//scale/pageSize.width
-                            scaleY = 1f//scale/pageSize.width
-                            rotationZ = rotation
-                        }
                 )
             }
 
@@ -116,16 +135,8 @@ fun DisplayElement(
                         painter = painter,
                         contentDescription = "Image",
                         modifier = Modifier
-                            .height(elementHeight)
+                            .size(elementHeight)
                             .fillMaxSize()
-                            .onSizeChanged { size ->
-                                elementSize = size // Запоминаем фактический размер стикера
-                            }
-                            .graphicsLayer {
-                                scaleX = 1f//scale/pageSize.width
-                                scaleY = 1f//scale/pageSize.width
-                                rotationZ = rotation
-                            }
                     )
                 }
             }
@@ -133,14 +144,19 @@ fun DisplayElement(
             ElementType.DEFAULT -> {}
             ElementType.TEXT_FIELD -> {
                 OutlinedTextField(
-                    value = element.resource,
+                    value = textForTextField,
                     readOnly = true,
                     onValueChange = {},
                     modifier = Modifier
                         .fillMaxWidth()
                         .heightIn()
+                        .widthIn(max = elementHeight)
                         .padding(10.dp) // Отступы внутри TextField
                     ,
+                    textStyle = TextStyle(
+                        fontFamily = bodyFontFamily,
+                        color = colorForTextField,
+                        fontSize = fontSize.sp),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedContainerColor = Color.Transparent,
                         unfocusedContainerColor = Color.Transparent,
