@@ -14,7 +14,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Edit
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -107,7 +109,6 @@ fun CurrentAlbumBody(
     updateCurrentPage: (Int) -> Unit
 ) {
     val addedElements = albumUiState.pagesMap
-    /*todo сделать отображение страниц*/
     val editingButtonShown = remember { mutableStateOf(true) }
     var pageSize by remember { mutableStateOf(IntSize.Zero) }
 
@@ -120,8 +121,6 @@ fun CurrentAlbumBody(
                 editingButtonShown.value = !editingButtonShown.value
             })
     ) {
-
-        /*todo придумать как ещё сказать oops, flag ??*/
         if (pageNumber == 0) {
             Column(
                 modifier = Modifier
@@ -135,9 +134,11 @@ fun CurrentAlbumBody(
                 )
             }
         } else {
+
             Column(
                 modifier = Modifier
-                    .fillMaxSize(),
+                    .fillMaxSize()
+                    ,
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
@@ -154,21 +155,29 @@ fun CurrentAlbumBody(
                     LaunchedEffect(pagerState.settledPage) {
                         updateCurrentPage(pagerState.settledPage + 1)
                     }
+
                     Box(
                         modifier = Modifier
-                            .fillMaxWidth(),
+                            .fillMaxWidth()
+                            .verticalScroll(rememberScrollState())
+                        ,
                         contentAlignment = Alignment.Center // Центрирование содержимого внутри Box
                     ) {
                         Column(
                             modifier = Modifier
-                                .aspectRatio(2f / 3f)
+                                .fillMaxWidth()
+                                .then(
+                                    if (albumUiState.pageOrientation) Modifier.aspectRatio(3f/2f)
+                                    else Modifier.aspectRatio(2f/3f)
+                                )
                                 .padding(dimensionResource(id = R.dimen.padding_from_edge)) // padding до shadow
                                 .shadow(
                                     10.dp,
                                     shape = RoundedCornerShape(8.dp)
                                 ) // shadow с закруглением
                                 .clip(RoundedCornerShape(8.dp)) // Clip для правильной тени
-                                .background(MaterialTheme.colorScheme.surfaceContainerHighest),
+                                .background(MaterialTheme.colorScheme.surfaceContainerHighest)
+                            ,
                             verticalArrangement = Arrangement.Center,
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
