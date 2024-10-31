@@ -27,8 +27,8 @@ interface AlbumsDAO {
     @Delete
     suspend fun deleteAlbum(album: Album)
 
-    @Query("DELETE FROM albumDetailsTable WHERE id = :albumDetailsId")
-    suspend fun deleteAlbumDetails(albumDetailsId: Int)
+    @Delete
+    suspend fun deleteAlbumDetails(albumDetails: AlbumDetailed)
 
     @Query("SELECT * from albumsTable WHERE id = :id")
     fun getAlbum(id: Int): Flow<Album>
@@ -53,4 +53,7 @@ interface AlbumsDAO {
 
     @Query("SELECT ad.id, ad.albumId, ad.pageNumber, ad.type,ad.offsetX,ad.offsetY,ad.scale,ad.rotation,ad.resource,ad.zIndex from albumDetailsTable ad INNER JOIN albumsTable a ON a.id = ad.albumId WHERE albumId = :albumId ")
     fun getAlbumDetailsStreamViaForeignKey(albumId: Int): Flow<List<AlbumDetailed>>
+
+    @Query("SELECT a.pageOrientation from albumsTable a where a.id = :albumId")
+    fun getPageOrientationForAlbum(albumId: Int): Flow<Boolean>
 }

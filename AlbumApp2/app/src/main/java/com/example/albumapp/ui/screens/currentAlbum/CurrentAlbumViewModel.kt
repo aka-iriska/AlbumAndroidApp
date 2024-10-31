@@ -1,5 +1,6 @@
 package com.example.albumapp.ui.screens.currentAlbum
 
+import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -26,13 +27,17 @@ class CurrentAlbumViewModel(
 
     init {
         viewModelScope.launch {
+            val flag = albumsRepository.getPageOrientationForAlbum(albumId)
+            Log.d("flag", flag.toString())
             albumsRepository
                 .getAlbumDetailsStreamViaForeignKey(albumId)
                 .filterNotNull()
                 .collect { albumDetails ->
                     pagesUiState = albumDetailedListToUiState(albumDetails, isEditing = false)
-                    pagesUiState =
-                        pagesUiState.copy(pageNumber = pagesUiState.pagesMap.keys.maxOrNull() ?: 0)
+                    pagesUiState = pagesUiState.copy(
+                        pageNumber = pagesUiState.pagesMap.keys.maxOrNull() ?: 0,
+                        pageOrientation = flag
+                    )
                 }
 
         }
@@ -85,12 +90,14 @@ data class CurrentAlbumUiState(
     val changed: Boolean = false,
     val pageNumber: Int = 0,
     val pagesToShow: Int = 1,
+    val pageOrientation: Boolean = false,
 )
 
 fun CurrentAlbumUiState.toAlbumDetailedDbClass(
     pageNumber: Int,
     element: PageElement
 ): AlbumDetailed = AlbumDetailed(
+    id = if (element.id > 0) element.id else 0,
     albumId = this.albumId,
     type = element.type.toString(),
     offsetX = element.offsetX,

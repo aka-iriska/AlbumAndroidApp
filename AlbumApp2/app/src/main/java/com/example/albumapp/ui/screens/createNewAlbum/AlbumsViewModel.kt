@@ -22,7 +22,7 @@ class AlbumsViewModel(private val albumsRepository: AlbumsRepository) : ViewMode
         private set
 
     /**
-     * Updates the [itemUiState] with the value provided in the argument. This method also triggers
+     * Updates the [AlbumsUiState] with the value provided in the argument. This method also triggers
      * a validation for input values.
      */
     fun updateUiState(albumDetails: AlbumsUiState) {
@@ -81,37 +81,37 @@ class AlbumsViewModel(private val albumsRepository: AlbumsRepository) : ViewMode
 
                     albumsRepository.updateAlbum(updatedAlbum)
 
-                    /**
-                     *  Saving the default value to the another table for future adding details
-                     */
 
-                    albumsRepository.insertAlbumDetails(
-                        AlbumDetailed(
-                            id = 0, albumId = insertedId.toInt(),
-                            type = "DEFAULT",
-                            offsetX = 0f,
-                            offsetY = 0f,
-                            scale = 0f,
-                            rotation = 0f,
-                            resource = "",
-                            zIndex = 0,
-                            pageNumber = 0
-                        )
-                    )
+                    Log.d("id", insertedId.toString())
                 }.onFailure { exception ->
                     // Обработка ошибки сохранения изображения
                     Log.e("Error", "Failed to save image: ${exception.message}")
                 }
             }
+            /**
+             *  Saving the default value to the another table for future adding details
+             */
 
-
+            albumsRepository.insertAlbumDetails(
+                AlbumDetailed(
+                    id = 0, albumId = insertedId.toInt(),
+                    type = "DEFAULT",
+                    offsetX = 0f,
+                    offsetY = 0f,
+                    scale = 0f,
+                    rotation = 0f,
+                    resource = "",
+                    zIndex = 0,
+                    pageNumber = 0
+                )
+            )
         }
 
 
     }
 
     suspend fun deleteAlbum(id: Int) {
-        var selectedAlbum: Album? = albumsRepository.getAlbumStream(id).first()
+        val selectedAlbum: Album? = albumsRepository.getAlbumStream(id).first()
         if (selectedAlbum != null) {
             albumsRepository.deleteAlbum(selectedAlbum)
         }
@@ -122,14 +122,13 @@ class AlbumsViewModel(private val albumsRepository: AlbumsRepository) : ViewMode
 data class Album(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
     val title: String,
-    var artist: String,
-    var description: String,
-    var imageCover: String = "",
-    //TEXT as ISO8601 strings ("YYYY-MM-DD HH:MM:SS.SSS")
-    var dateOfCreation: String,
-    var dateOfActivity: String,
-    var endDateOfActivity: String
-    //val pages: List<Page> = emptyList()
+    val artist: String,
+    val description: String,
+    val imageCover: String = "",
+    val dateOfCreation: String,
+    val dateOfActivity: String,
+    val endDateOfActivity: String,
+    val pageOrientation: Boolean = false, // false - вертикальная, true - горизонтальная
 )
 
 data class AlbumsUiState(
@@ -141,7 +140,7 @@ data class AlbumsUiState(
     val dateOfActivity: String = "",
     var endDateOfActivity: String = "",
     val dateOfCreation: String = "1000-10-10 10:10:10.000",
-    val isEntryValid: Boolean = false
+    val isEntryValid: Boolean = false,
 )
 
 fun AlbumsUiState.toAlbumDbClass(): Album = Album(
@@ -152,7 +151,7 @@ fun AlbumsUiState.toAlbumDbClass(): Album = Album(
     imageCover = imageCover,
     dateOfCreation = dateOfCreation,
     dateOfActivity = dateOfActivity,
-    endDateOfActivity = endDateOfActivity
+    endDateOfActivity = endDateOfActivity,
 )
 
 fun Album.toAlbumsUiState(): AlbumsUiState = AlbumsUiState(
@@ -163,7 +162,7 @@ fun Album.toAlbumsUiState(): AlbumsUiState = AlbumsUiState(
     imageCover = imageCover,
     dateOfCreation = dateOfCreation,
     dateOfActivity = dateOfActivity,
-    endDateOfActivity = endDateOfActivity
+    endDateOfActivity = endDateOfActivity,
 )
 
 // Custom exception class for image saving errors

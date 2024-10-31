@@ -1,5 +1,6 @@
 package com.example.albumapp.data
 
+import android.util.Log
 import com.example.albumapp.ui.screens.createNewAlbum.Album
 import com.example.albumapp.ui.screens.currentAlbum.AlbumDetailed
 import kotlinx.coroutines.flow.Flow
@@ -19,8 +20,8 @@ class OfflineAlbumsRepository(private val albumDao: AlbumsDAO) : AlbumsRepositor
         albumDao.insertAlbumDetails(albumDetails)
 
     override suspend fun deleteAlbum(album: Album) = albumDao.deleteAlbum(album)
-    override suspend fun deleteAlbumDetails(albumDetailsId: Int) =
-        albumDao.deleteAlbumDetails(albumDetailsId)
+    override suspend fun deleteAlbumDetails(albumDetails: AlbumDetailed) =
+        albumDao.deleteAlbumDetails(albumDetails)
 
     override suspend fun updateAlbum(album: Album) = albumDao.update(album)
     override suspend fun updateAlbumDetails(albumDetails: AlbumDetailed) =
@@ -35,4 +36,8 @@ class OfflineAlbumsRepository(private val albumDao: AlbumsDAO) : AlbumsRepositor
 
     override fun getAlbumDetailsStreamViaForeignKey(albumId: Int): Flow<List<AlbumDetailed>> =
         albumDao.getAlbumDetailsStreamViaForeignKey(albumId)
+
+    override suspend fun getPageOrientationForAlbum(albumId: Int) : Boolean {
+        return albumDao.getPageOrientationForAlbum(albumId = albumId).firstOrNull() ?: false
+    }
 }

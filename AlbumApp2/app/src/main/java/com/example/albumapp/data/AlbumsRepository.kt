@@ -53,7 +53,7 @@ interface AlbumsRepository {
     /**
      * Delete album details from the data source
      */
-    suspend fun deleteAlbumDetails(albumDetailsId: Int)
+    suspend fun deleteAlbumDetails(albumDetails: AlbumDetailed)
 
     /**
      * Update item in the data source
@@ -74,4 +74,9 @@ interface AlbumsRepository {
      * Delete all albums details.
      */
     suspend fun deleteAllAlbumsDetailed()
+
+    /**
+     * Get the page orientation for album
+     */
+    suspend fun getPageOrientationForAlbum(albumId: Int) : Boolean
 }

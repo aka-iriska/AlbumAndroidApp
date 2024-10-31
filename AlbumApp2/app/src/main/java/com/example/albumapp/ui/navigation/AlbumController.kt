@@ -67,6 +67,7 @@ fun AlbumApp(
         {
             EditAlbumInGallery(navigateBack = { navController.navigateUp() })
         }
+        /*todo подумать над тем, чтобы за двумя одинаковыми экранами не лезть в бд*/
         composable(
             route = CurrentAlbumDestination.routeWithArgs,
             arguments = listOf(navArgument(CurrentAlbumDestination.ALBUM_ID_ARG) {
