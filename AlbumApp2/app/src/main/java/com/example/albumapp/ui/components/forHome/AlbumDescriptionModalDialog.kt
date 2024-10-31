@@ -121,7 +121,6 @@ fun MinimalDialog(
                             onDismissRequest = { openEditingButton.value = false })
                         if (openSureDelete.value) {
                             SureChoice(
-                                color = additionalColor,
                                 onYesClick = {
                                     coroutineScope.launch {
                                         albumsViewModel.deleteAlbum(

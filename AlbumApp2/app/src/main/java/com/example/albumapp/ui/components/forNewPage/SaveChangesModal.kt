@@ -29,7 +29,6 @@ fun SaveChangesModal(
     onDismissRequest: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val additionalColor: Color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
     Dialog(onDismissRequest = onDismissRequest) {
         ElevatedCard(
             modifier = Modifier
@@ -47,7 +46,6 @@ fun SaveChangesModal(
                     verticalArrangement = Arrangement.SpaceAround
                 ) {
                     SureChoice(
-                        color = additionalColor,
                         onYesClick =
                         saveChanges,
                         onCancelClick = onDismissRequest,

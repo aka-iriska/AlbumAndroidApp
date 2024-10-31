@@ -2,6 +2,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -14,13 +15,13 @@ import com.example.albumapp.R
 
 @Composable
 fun SureChoice(
-    color: Color,
     onYesClick: () -> Unit,
     onNoClick: () -> Unit,
     onCancelClick: () -> Unit = {},
     onCancelClickFlag: Boolean = false,
     text: String
 ) {
+    val color: Color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
     Column(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.SpaceBetween,
