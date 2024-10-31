@@ -10,6 +10,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.albumapp.data.AlbumsRepository
+import com.example.albumapp.ui.screens.currentAlbum.AlbumDetailed
 import com.example.albumapp.ui.screens.currentAlbum.CurrentAlbumUiState
 import com.example.albumapp.ui.screens.currentAlbum.ElementType
 import com.example.albumapp.ui.screens.currentAlbum.PageElement
@@ -17,17 +18,22 @@ import com.example.albumapp.ui.screens.currentAlbum.albumDetailedListToUiState
 import com.example.albumapp.ui.screens.currentAlbum.toAlbumDetailedDbClass
 import com.example.albumapp.utils.saveImagePathLocally
 import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import okhttp3.internal.toImmutableList
 
 class EditPagesViewModel(
     savedStateHandle: SavedStateHandle, private val albumsRepository: AlbumsRepository
 ) : ViewModel() {
+
     var pagesUiState by mutableStateOf(CurrentAlbumUiState())
         private set
+
     private val albumId: Int =
         checkNotNull(savedStateHandle[CreateNewPagesDestination.ALBUM_ID_ARG])
+
     private var elementIdCounter = -2
+
     private var deletedElements = mutableListOf<Int>()
 
     init {
@@ -52,6 +58,7 @@ class EditPagesViewModel(
     }*/
 
     fun addNewPage() {
+        //val newPagesNumber = pagesUiState.pageNumber + 1
         pagesUiState = pagesUiState.copy(pageNumber = pagesUiState.pageNumber + 1)
     }
 
@@ -60,6 +67,7 @@ class EditPagesViewModel(
     }
 
     fun updateUiState(pageNumber: Int, element: PageElement, elementId: Int = -1) {
+        Log.d("update", "$element")
         if (pageNumber != 0) {
             val newPagesMap = pagesUiState.pagesMap.toMutableMap()
             // Получаем список элементов для страницы или создаем новый пустой список, если его нет
@@ -84,6 +92,21 @@ class EditPagesViewModel(
         }
     }
 
+    fun deletePage(pageNumber: Int) {
+        var mutablePagesMap = emptyMap<Int, List<PageElement>>().toMutableMap()
+        pagesUiState.pagesMap.filterNot { content ->
+            content.key == pageNumber
+        }.forEach { (key, value) ->
+            if (key > pageNumber) {
+                mutablePagesMap[key - 1] = value
+            } else mutablePagesMap[key] = value
+        }
+        pagesUiState =
+            pagesUiState.copy(
+                pagesMap = mutablePagesMap, pageNumber = pagesUiState.pageNumber - 1
+            )
+    }
+
     fun deleteElement(pageNumber: Int, elementId: Int) {
         Log.d("delete", elementId.toString())
         // Получаем текущий список элементов на странице с номером pageNumber
@@ -93,7 +116,7 @@ class EditPagesViewModel(
         currentPageElements?.let {
             // Удаляем элемент с указанным elementId
             val updatedElements = it.filterNot { element -> element.id == elementId }
-
+            Log.d("deleteElement", "$updatedElements")
             // Обновляем карту страниц с измененным списком элементов
             pagesUiState = pagesUiState.copy(
                 pagesMap = pagesUiState.pagesMap.toMutableMap().apply {
@@ -138,10 +161,19 @@ class EditPagesViewModel(
 
     suspend fun savePagesForAlbum(context: Context) {
         pagesUiState.pagesMap.map { pageContent ->
+            Log.d("page", "$pageContent")
+
             val pageNumber = pageContent.key
+
             pageContent.value.map { pageElement ->
+
                 val albumDetailedDb = pagesUiState.toAlbumDetailedDbClass(pageNumber, pageElement)
+
                 val insertedId = albumsRepository.insertAlbumDetails(albumDetailedDb)
+                Log.d(
+                    "save",
+                    "insertedId: $insertedId\n dbClass: $albumDetailedDb\n element: ${pageElement.id}, ${pageElement.type}"
+                )
                 /**
                  * if we save image we need to reload real path
                  */
@@ -152,6 +184,7 @@ class EditPagesViewModel(
                         insertedId.toInt(),
                         "image_element"
                     ).onSuccess { permanentUri ->
+
                         val updatedPageElement =
                             albumDetailedDb.copy(
                                 id = insertedId.toInt(),
@@ -162,6 +195,7 @@ class EditPagesViewModel(
                          */
 
                         albumsRepository.updateAlbumDetails(updatedPageElement)
+
                     }.onFailure { exception ->
                         // Обработка ошибки сохранения изображения
                         Log.e("Error", "Failed to save image: ${exception.message}")
@@ -169,8 +203,14 @@ class EditPagesViewModel(
                 }
             }
         }
+        Log.d("deleted", deletedElements.toString())
         deletedElements.forEach { elementId ->
-            albumsRepository.deleteAlbumDetails(elementId)
+            val selectedElement: AlbumDetailed? =
+                albumsRepository.getAlbumDetailsStream(elementId).first()
+
+            if (selectedElement != null) {
+                albumsRepository.deleteAlbumDetails(selectedElement)
+            }
         }
     }
 }

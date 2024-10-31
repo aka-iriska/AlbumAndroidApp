@@ -41,9 +41,12 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconToggleButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SheetState
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -71,7 +74,7 @@ import coil.request.ImageRequest
 import com.example.albumapp.R
 import com.example.albumapp.data.AppViewModelProvider
 import com.example.albumapp.ui.components.forCountPages.ShowActivePageByRadioButton
-import com.example.albumapp.ui.components.forNewPage.DraggableSticker
+import com.example.albumapp.ui.components.forNewPage.DraggableElement
 import com.example.albumapp.ui.components.forNewPage.SaveChangesModal
 import com.example.albumapp.ui.navigation.AppTopBar
 import com.example.albumapp.ui.navigation.NavigationDestination
@@ -79,6 +82,7 @@ import com.example.albumapp.ui.screens.currentAlbum.CurrentAlbumUiState
 import com.example.albumapp.ui.screens.currentAlbum.ElementType
 import com.example.albumapp.ui.screens.currentAlbum.PageElement
 import com.example.albumapp.ui.screens.currentAlbum.stickersMap
+import com.example.albumapp.utils.colorToHex
 import kotlinx.coroutines.launch
 import kotlin.math.min
 
@@ -159,6 +163,7 @@ fun CreateNewPages(
             modifier = modifier.padding(innerPadding),
             onUpdate = albumViewModel::updateUiState,
             albumUiState = albumUiState,
+            onDeletePage = albumViewModel::deletePage,
             onDelete = albumViewModel::deleteElement,
             onCancelDelete = albumViewModel::cancelDeleteElement,
             addNewPage = albumViewModel::addNewPage,
@@ -167,7 +172,7 @@ fun CreateNewPages(
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
+@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun CreateNewPagesBody(
     stickersList: List<String>,
@@ -177,6 +182,7 @@ fun CreateNewPagesBody(
     onUpdate: (Int, PageElement, Int) -> Unit,
     albumUiState: CurrentAlbumUiState,
     onDelete: (Int, Int) -> Unit,
+    onDeletePage: (Int) -> Unit,
     onCancelDelete: (Int, Int, Int, Int, IntSize) -> Unit,
     addNewPage: () -> Unit,
     updateCurrentPage: (Int) -> Unit
@@ -184,9 +190,13 @@ fun CreateNewPagesBody(
 ) {
     val addedElements = albumUiState.pagesMap
     var stickersPressed by remember { mutableStateOf(false) }
-    var settingsPressed by remember { mutableStateOf(false) }
+    // var settingsPressed by remember { mutableStateOf(false) }
     val pageNumber = albumUiState.pageNumber
     var pageSize by remember { mutableStateOf(IntSize.Zero) }
+
+    val primaryColor = MaterialTheme.colorScheme.primary
+
+    var showSaveChanges by remember { mutableStateOf(false) }
 
     /**
      * For Image Picker
@@ -195,7 +205,6 @@ fun CreateNewPagesBody(
     val picker =
         rememberLauncherForActivityResult(contract = ActivityResultContracts.PickVisualMedia()) { uri: Uri? ->
             if (uri != null) {
-                /*    imageUri = uri*/
                 onUpdate(
                     albumUiState.currentPage,
                     PageElement(
@@ -207,12 +216,43 @@ fun CreateNewPagesBody(
                         resource = uri.toString()
                     ),
                     -1
-                ) // Обновляем ImageUri
+                )
             } else {
                 Log.e("PhotoPicker", "No media selected")
             }
         }
 
+    if (showSaveChanges) {
+        Dialog(onDismissRequest = { showSaveChanges = false }) {
+            ElevatedCard(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                shape = MaterialTheme.shapes.medium,
+            ) {
+                Box(
+                    modifier = Modifier.clip(MaterialTheme.shapes.medium)
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .padding(dimensionResource(id = R.dimen.padding_from_edge))
+                            .verticalScroll(rememberScrollState()),
+                        verticalArrangement = Arrangement.SpaceAround
+                    ) {
+                        SureChoice(
+                            onYesClick = {
+                                onDeletePage(albumUiState.currentPage)
+                                showSaveChanges = false
+                                         },
+                            onNoClick = { showSaveChanges = false },
+                            text = "Are you sure to delete the whole page?"
+                        )
+
+                    }
+                }
+            }
+        }
+    }
     Column(modifier = modifier.fillMaxSize()) {
 
         /**
@@ -304,6 +344,7 @@ fun CreateNewPagesBody(
                 /**
                  * for text fields
                  */
+
                 item {
                     IconButton(
                         onClick = {
@@ -313,9 +354,9 @@ fun CreateNewPagesBody(
                                     type = ElementType.TEXT_FIELD,
                                     offsetY = 0f / pageSize.width,
                                     offsetX = 0f / pageSize.height,
-                                    scale = 0.3f,// / min(pageSize.width, pageSize.height),
+                                    scale = 0.2f,// / min(pageSize.width, pageSize.height),
                                     rotation = 0f,
-                                    resource = ""
+                                    resource = "16f/${colorToHex(primaryColor)}/"
                                 ),
                                 -1
                             )
@@ -327,12 +368,48 @@ fun CreateNewPagesBody(
                         )
                     }
                 }
+
+                /**
+                 * for adding new pages in Album
+                 */
+
+                item {
+                    IconButton(onClick = addNewPage) {
+                        Icon(
+                            painterResource(R.drawable.new_page),
+                            modifier = Modifier.stickerChoice(),
+                            contentDescription = "Add a new page"
+                        )
+                    }
+                }
+
+                /**
+                 * for deleting the whole page
+                 */
+
+                item {
+                    IconButton(onClick = { showSaveChanges = true }) {
+                        Icon(
+                            painterResource(R.drawable.page_delete),
+                            modifier = Modifier.stickerChoice(),
+                            contentDescription = "Delete the whole page"
+                        )
+                    }
+                }
+
                 /**
                  * for settings: changing orientation of page, count of showed ones
                  */
 
                 item {
-                    IconToggleButton(checked = settingsPressed,
+                    IconButton(onClick = {}){
+                        Icon(
+                            painterResource(R.drawable.rotate_pages),
+                            modifier = Modifier.stickerChoice(),
+                            contentDescription = "Change pages rotation"
+                        )
+                    }
+                    /*IconToggleButton(checked = settingsPressed,
                         onCheckedChange = { settingsPressed = it }) {
                         if (settingsPressed) {
                             Icon(
@@ -347,24 +424,8 @@ fun CreateNewPagesBody(
                                 modifier = Modifier.stickerChoice()
                             )
                         }
-                    }
+                    }*/
                 }
-
-                /**
-                 * for adding new pages in Album
-                 */
-
-                /*todo add adding new pages*/
-                item {
-                    IconButton(onClick = addNewPage) {
-                        Icon(
-                            painterResource(R.drawable.new_page),
-                            modifier = Modifier.stickerChoice(),
-                            contentDescription = ""
-                        )
-                    }
-                }
-
             }
         }
 
@@ -381,6 +442,15 @@ fun CreateNewPagesBody(
                 var isNearEdge by remember { mutableStateOf(false) } // Для подсветки всей `Column`
                 val paddingSizeForPage = (min(pageSize.height, pageSize.width) / 22).dp
                 val pagerState = rememberPagerState(pageCount = { pageNumber })
+
+                /**
+                 * для BottomSheet
+                 */
+
+                val sheetState = rememberModalBottomSheetState()
+                var showBottomSheet by remember { mutableStateOf(false) }
+                var selectedElementId by remember { mutableIntStateOf(0) }
+
                 HorizontalPager(
                     state = pagerState,
                     modifier = Modifier
@@ -392,11 +462,14 @@ fun CreateNewPagesBody(
                     }
                     Box(
                         modifier = Modifier
-                            .fillMaxWidth(),
+                            .fillMaxWidth()
+                            .verticalScroll(rememberScrollState())
+                        ,
                         contentAlignment = Alignment.Center // Центрирование содержимого внутри Box
                     ) {
                         Column(
                             modifier = Modifier
+                                .fillMaxWidth()
                                 .aspectRatio(2f / 3f)
                                 .padding(dimensionResource(id = R.dimen.padding_from_edge)) // padding до shadow
                                 .shadow(
@@ -432,7 +505,14 @@ fun CreateNewPagesBody(
                                     onElementRemove = onDelete,
                                     onCancelDelete = onCancelDelete,
                                     currentPage = albumUiState.currentPage,
-                                    focusManager = focusManager
+                                    focusManager = focusManager,
+                                    sheetState = sheetState,
+                                    onLongClick = { showBottom, settedElement ->
+                                        showBottomSheet = showBottom
+                                        selectedElementId = settedElement
+                                    },
+                                    showBottomSheet = showBottomSheet,
+                                    selectedElementId = selectedElementId
                                 )
                             } else {
                                 Column(
@@ -456,6 +536,7 @@ fun CreateNewPagesBody(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CanvasBody(
     modifier: Modifier = Modifier,
@@ -465,19 +546,23 @@ fun CanvasBody(
     onElementRemove: (Int, Int) -> Unit,
     comeToTheEdge: (Boolean) -> Unit,
     onCancelDelete: (Int, Int, Int, Int, IntSize) -> Unit,
+    sheetState: SheetState,
+    onLongClick: (Boolean, Int) -> Unit,
+    showBottomSheet: Boolean,
+    selectedElementId: Int,
     currentPage: Int,
     focusManager: FocusManager
 ) {
     val sortedElements = elements.sortedBy { it.zIndex }
 
     var elementToRemove by remember { mutableStateOf<Pair<Int, Int>?>(null) } // Текущий элемент для удаления
-    val additionalColor: Color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+
     var elementSize by remember { mutableStateOf(IntSize.Zero) }
     Box(
         modifier = modifier
     ) {
         sortedElements.forEach { element ->
-            DraggableSticker(
+            DraggableElement(
                 pageNumber = currentPage,
                 elementName = element.resource,
                 context = LocalContext.current,
@@ -489,10 +574,21 @@ fun CanvasBody(
                 onDelete = {
                     elementToRemove = Pair(currentPage, element.id)
                     elementSize = it
-                }
+                },
+                sheetState = sheetState,
+                onLongClick = onLongClick,
+                showBottomSheet = showBottomSheet,
+                selectedElementId = selectedElementId
             )
+            // Слайдеры для изменения параметров
+            /*SliderWithLabel("Scale", element.scale , 0.1f , 2f) {
+                element.scale = it }*/
+
+
         }
+
     }
+
     elementToRemove?.let {
         Dialog(onDismissRequest = {
             comeToTheEdge(false)
@@ -514,7 +610,6 @@ fun CanvasBody(
                         verticalArrangement = Arrangement.SpaceAround
                     ) {
                         SureChoice(
-                            color = additionalColor,
                             onYesClick =
                             {
                                 onElementRemove(
