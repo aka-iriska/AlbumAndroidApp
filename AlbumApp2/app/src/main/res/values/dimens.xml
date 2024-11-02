@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <dimen name="padding_from_edge">32dp</dimen>
+    <dimen name="padding_for_floating_button">32dp</dimen>
+    <dimen name="padding_from_edge">12dp</dimen>
     <dimen name="padding_for_album">20dp</dimen>
     <dimen name="height_for_button">70dp</dimen>
 </resources>
