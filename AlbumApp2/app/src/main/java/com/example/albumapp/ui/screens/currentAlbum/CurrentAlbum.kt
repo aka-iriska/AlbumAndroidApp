@@ -70,13 +70,19 @@ fun CurrentAlbum(
     albumViewModel: CurrentAlbumViewModel = viewModel(factory = AppViewModelProvider.Factory)
 ) {
     val uiState = albumViewModel.pagesUiState
-    var albumTitle by rememberSaveable { mutableStateOf("") }
+    var albumTitle by remember { mutableStateOf("") }
+
+    val editingButtonShown = rememberSaveable{ mutableStateOf(true) }
 
     Scaffold(
         topBar = {
             AppTopBar(
                 title = albumTitle,
-                navigateBack = navigateBack
+                navigateBack = navigateBack,
+                modifier = Modifier
+                    .clickable(onClick = {
+                        editingButtonShown.value = !editingButtonShown.value
+                    })
             )
         }
     ) { innerpadding ->
@@ -89,7 +95,7 @@ fun CurrentAlbum(
 
         CurrentAlbumBody(
             albumUiState = uiState,
-            //title = albumTitle,
+            editingButtonShow = editingButtonShown.value,
             onEditClick = onEditClick,
             //onItemValueChange = albumViewModel::updateUiState,
             modifier = modifier
@@ -104,12 +110,12 @@ fun CurrentAlbum(
 fun CurrentAlbumBody(
     modifier: Modifier = Modifier,
     albumUiState: CurrentAlbumUiState,
-    //title: String,
+    editingButtonShow: Boolean,
     onEditClick: (Int) -> Unit = {},
     updateCurrentPage: (Int) -> Unit
 ) {
     val addedElements = albumUiState.pagesMap
-    val editingButtonShown = remember { mutableStateOf(true) }
+
     var pageSize by remember { mutableStateOf(IntSize.Zero) }
 
     val pageNumber = albumUiState.pageNumber
@@ -117,9 +123,7 @@ fun CurrentAlbumBody(
     Box(
         modifier = modifier
             .fillMaxSize()
-            .clickable(onClick = {
-                editingButtonShown.value = !editingButtonShown.value
-            })
+
     ) {
         if (pageNumber == 0) {
             Column(
@@ -137,8 +141,7 @@ fun CurrentAlbumBody(
 
             Column(
                 modifier = Modifier
-                    .fillMaxSize()
-                    ,
+                    .fillMaxSize(),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
@@ -155,54 +158,58 @@ fun CurrentAlbumBody(
                     LaunchedEffect(pagerState.settledPage) {
                         updateCurrentPage(pagerState.settledPage + 1)
                     }
-
-                    Box(
+                    Column(
                         modifier = Modifier
-                            .fillMaxWidth()
+                            .fillMaxSize()
                             .verticalScroll(rememberScrollState())
                         ,
-                        contentAlignment = Alignment.Center // Центрирование содержимого внутри Box
+                        verticalArrangement = Arrangement.Center
                     ) {
-                        Column(
+                        Box(
                             modifier = Modifier
-                                .fillMaxWidth()
-                                .then(
-                                    if (albumUiState.pageOrientation) Modifier.aspectRatio(3f/2f)
-                                    else Modifier.aspectRatio(2f/3f)
-                                )
-                                .padding(dimensionResource(id = R.dimen.padding_from_edge)) // padding до shadow
-                                .shadow(
-                                    10.dp,
-                                    shape = RoundedCornerShape(8.dp)
-                                ) // shadow с закруглением
-                                .clip(RoundedCornerShape(8.dp)) // Clip для правильной тени
-                                .background(MaterialTheme.colorScheme.surfaceContainerHighest)
-                            ,
-                            verticalArrangement = Arrangement.Center,
-                            horizontalAlignment = Alignment.CenterHorizontally
+                                .fillMaxWidth(),
+                            contentAlignment = Alignment.Center // Центрирование содержимого внутри Box
                         ) {
-                            if (pagerState.settledPage == pageIndex && albumUiState.currentPage == pageIndex + 1) {
-                                CurrentAlbumPagesView(
-                                    elements = addedElements.getOrDefault(
-                                        albumUiState.currentPage,
-                                        emptyList()
-                                    ),
-                                    modifier = Modifier
-                                        .fillMaxSize()
-                                        .padding(paddingSizeForPage)
-                                        .onSizeChanged { newSize ->
-                                            pageSize = newSize
-                                        },
-                                    pageSize = pageSize,
-                                    //currentPage = albumUiState.currentPage
-                                )
-                            } else {
-                                Column(
-                                    modifier = Modifier.fillMaxSize(),
-                                    horizontalAlignment = Alignment.CenterHorizontally,
-                                    verticalArrangement = Arrangement.Center
-                                ) {
-                                    //CircularProgressIndicator()
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .then(
+                                        if (albumUiState.pageOrientation) Modifier.aspectRatio(3f / 2f)
+                                        else Modifier.aspectRatio(2f / 3f)
+                                    )
+                                    .padding(dimensionResource(id = R.dimen.padding_from_edge)) // padding до shadow
+                                    .shadow(
+                                        10.dp,
+                                        shape = RoundedCornerShape(8.dp)
+                                    ) // shadow с закруглением
+                                    .clip(RoundedCornerShape(8.dp)) // Clip для правильной тени
+                                    .background(MaterialTheme.colorScheme.surfaceContainerHighest),
+                                verticalArrangement = Arrangement.Center,
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                if (pagerState.settledPage == pageIndex && albumUiState.currentPage == pageIndex + 1) {
+                                    CurrentAlbumPagesView(
+                                        elements = addedElements.getOrDefault(
+                                            albumUiState.currentPage,
+                                            emptyList()
+                                        ),
+                                        modifier = Modifier
+                                            .fillMaxSize()
+                                            .padding(paddingSizeForPage)
+                                            .onSizeChanged { newSize ->
+                                                pageSize = newSize
+                                            },
+                                        pageSize = pageSize,
+                                        //currentPage = albumUiState.currentPage
+                                    )
+                                } else {
+                                    Column(
+                                        modifier = Modifier.fillMaxSize(),
+                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                        verticalArrangement = Arrangement.Center
+                                    ) {
+                                        //CircularProgressIndicator()
+                                    }
                                 }
                             }
                         }
@@ -220,9 +227,9 @@ fun CurrentAlbumBody(
             verticalAlignment = Alignment.Bottom,
             modifier = Modifier
                 .fillMaxSize()
-                .padding(dimensionResource(R.dimen.padding_from_edge))
+                .padding(dimensionResource(R.dimen.padding_for_floating_button))
         ) {
-            if (editingButtonShown.value) {
+            if (editingButtonShow) {
                 FloatingActionButton(
                     onClick = { onEditClick(albumUiState.albumId) }
                 ) {
