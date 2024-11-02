@@ -70,6 +70,7 @@ import com.example.albumapp.ui.theme.bodyFontFamily
 import com.example.albumapp.utils.colorToHex
 import com.example.albumapp.utils.hexToColor
 import kotlinx.coroutines.launch
+import kotlin.math.min
 import kotlin.math.roundToInt
 
 
@@ -98,9 +99,12 @@ fun DraggableElement(
         )
     } // для перемещения
     var rotation by remember { mutableFloatStateOf(element.rotation) } // для вращения
+
+    val orienter = min(pageSize.width, pageSize.height)
+
     var scale by remember {
         mutableFloatStateOf(
-            element.scale * pageSize.width
+            element.scale * orienter
         )
     } // для увеличения
 
@@ -130,7 +134,7 @@ fun DraggableElement(
     LaunchedEffect(pageSize, element.offsetX, element.offsetY) {
         position = Offset(element.offsetX * pageSize.width, element.offsetY * pageSize.height)
         rotation = element.rotation
-        scale = element.scale * pageSize.width
+        scale = element.scale * orienter
     }
 
     Box(modifier = Modifier
@@ -152,7 +156,7 @@ fun DraggableElement(
                 pageNumber, element.copy(
                     offsetX = position.x / pageSize.width,
                     offsetY = position.y / pageSize.height,
-                    scale = scale / pageSize.width,
+                    scale = scale / orienter,
                     rotation = rotation,
                     zIndex = element.zIndex
                 ), element.id
