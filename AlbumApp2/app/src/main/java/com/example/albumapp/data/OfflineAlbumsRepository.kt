@@ -1,6 +1,5 @@
 package com.example.albumapp.data
 
-import android.util.Log
 import com.example.albumapp.ui.screens.createNewAlbum.Album
 import com.example.albumapp.ui.screens.currentAlbum.AlbumDetailed
 import kotlinx.coroutines.flow.Flow
@@ -40,4 +39,7 @@ class OfflineAlbumsRepository(private val albumDao: AlbumsDAO) : AlbumsRepositor
     override suspend fun getPageOrientationForAlbum(albumId: Int) : Boolean {
         return albumDao.getPageOrientationForAlbum(albumId = albumId).firstOrNull() ?: false
     }
+
+    override suspend fun updatePageOrientation(albumId: Int, newPageOrientation: Boolean) =
+        albumDao.updatePageOrientation(albumId = albumId, newPageOrientation = newPageOrientation)
 }

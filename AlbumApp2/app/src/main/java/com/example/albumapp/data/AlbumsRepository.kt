@@ -28,13 +28,14 @@ interface AlbumsRepository {
      */
     fun getAlbumDetailsStream(albumId: Int): Flow<AlbumDetailed?>
 
+    fun getAlbumDetailsStreamViaForeignKey(albumId: Int): Flow<List<AlbumDetailed>>
+
     /**
      * Get the title of album for currentAlbumScreen via foreignkey albumId in albumDetailed and id in albumsTable
      */
     suspend fun getAlbumTitleForDetailed(albumId: Int): String
 
-    fun getAlbumDetailsStreamViaForeignKey(albumId: Int): Flow<List<AlbumDetailed>>
-
+    suspend fun updatePageOrientation(albumId: Int, newPageOrientation: Boolean)
     /**
      * Insert album in the data source
      */

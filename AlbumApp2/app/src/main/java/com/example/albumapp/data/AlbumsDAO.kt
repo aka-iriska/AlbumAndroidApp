@@ -56,4 +56,7 @@ interface AlbumsDAO {
 
     @Query("SELECT a.pageOrientation from albumsTable a where a.id = :albumId")
     fun getPageOrientationForAlbum(albumId: Int): Flow<Boolean>
+
+    @Query("UPDATE albumsTable SET pageOrientation = :newPageOrientation WHERE id = :albumId")
+    suspend fun updatePageOrientation(albumId: Int, newPageOrientation: Boolean)
 }

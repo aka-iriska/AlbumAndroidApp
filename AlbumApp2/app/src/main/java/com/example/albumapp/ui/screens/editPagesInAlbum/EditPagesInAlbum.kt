@@ -31,9 +31,6 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -142,6 +139,7 @@ fun CreateNewPages(
                 SaveChangesModal(
                     saveChanges = {
                         coroutineScope.launch {
+                            Log.d("orientation on click", albumUiState.pageOrientation.toString())
                             albumViewModel.savePagesForAlbum(context)
                             openAlertDialog.value = false
                             navigateBack(albumUiState.albumId)
@@ -167,7 +165,8 @@ fun CreateNewPages(
             onDelete = albumViewModel::deleteElement,
             onCancelDelete = albumViewModel::cancelDeleteElement,
             addNewPage = albumViewModel::addNewPage,
-            updateCurrentPage = albumViewModel::updateCurrentPage
+            updateCurrentPage = albumViewModel::updateCurrentPage,
+            updatePageOrientation = albumViewModel::updatePageOrientation
         )
     }
 }
@@ -185,9 +184,10 @@ fun CreateNewPagesBody(
     onDeletePage: (Int) -> Unit,
     onCancelDelete: (Int, Int, Int, Int, IntSize) -> Unit,
     addNewPage: () -> Unit,
-    updateCurrentPage: (Int) -> Unit
+    updateCurrentPage: (Int) -> Unit,
+    updatePageOrientation: (Boolean) -> Unit,
 
-) {
+    ) {
     val addedElements = albumUiState.pagesMap
     var stickersPressed by remember { mutableStateOf(false) }
     // var settingsPressed by remember { mutableStateOf(false) }
@@ -243,7 +243,7 @@ fun CreateNewPagesBody(
                             onYesClick = {
                                 onDeletePage(albumUiState.currentPage)
                                 showSaveChanges = false
-                                         },
+                            },
                             onNoClick = { showSaveChanges = false },
                             text = "Are you sure to delete the whole page?"
                         )
@@ -328,7 +328,6 @@ fun CreateNewPagesBody(
                  * for images
                  */
 
-                /*todo add adding images*/
                 item {
                     IconButton(onClick = {
                         picker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
@@ -402,7 +401,9 @@ fun CreateNewPagesBody(
                  */
 
                 item {
-                    IconButton(onClick = {}){
+                    IconButton(onClick = {
+                        updatePageOrientation(!albumUiState.pageOrientation)
+                    }) {
                         Icon(
                             painterResource(R.drawable.rotate_pages),
                             modifier = Modifier.stickerChoice(),
@@ -460,67 +461,75 @@ fun CreateNewPagesBody(
                     LaunchedEffect(pagerState.settledPage) {
                         updateCurrentPage(pagerState.settledPage + 1)
                     }
-                    Box(
+                    Column(
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .verticalScroll(rememberScrollState())
-                        ,
-                        contentAlignment = Alignment.Center // Центрирование содержимого внутри Box
+                            .fillMaxSize()
+                            .verticalScroll(rememberScrollState()),
+                        verticalArrangement = Arrangement.Center
                     ) {
-                        Column(
+                        Box(
                             modifier = Modifier
-                                .fillMaxWidth()
-                                .aspectRatio(2f / 3f)
-                                .padding(dimensionResource(id = R.dimen.padding_from_edge)) // padding до shadow
-                                .shadow(
-                                    10.dp,
-                                    shape = RoundedCornerShape(8.dp)
-                                ) // shadow с закруглением
-                                .clip(RoundedCornerShape(8.dp)) // Clip для правильной тени
-                                .background(MaterialTheme.colorScheme.surfaceContainerHighest),
-                            verticalArrangement = Arrangement.Center,
-                            horizontalAlignment = Alignment.CenterHorizontally
+                                .fillMaxWidth(),
+                            contentAlignment = Alignment.Center // Центрирование содержимого внутри Box
                         ) {
-                            if (pagerState.settledPage == pageIndex && albumUiState.currentPage == pageIndex + 1) {
-                                updateCurrentPage(pagerState.settledPage + 1)
-                                CanvasBody(
-                                    pageSize = pageSize,
-                                    elements = addedElements.getOrDefault(
-                                        albumUiState.currentPage,
-                                        emptyList()
-                                    ),
-                                    onUpdate = onUpdate,
-                                    modifier = Modifier
-                                        .fillMaxSize()
-                                        .border(
-                                            width = paddingSizeForPage,
-                                            color = if (isNearEdge) Color.Red.copy(alpha = 0.3f) else Color.Unspecified,
-                                            shape = RoundedCornerShape(8.dp)
-                                        )
-                                        .padding(paddingSizeForPage)
-                                        .onSizeChanged { newSize ->
-                                            pageSize = newSize
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .then(
+                                        if (albumUiState.pageOrientation) Modifier.aspectRatio(3f / 2f)
+                                        else Modifier.aspectRatio(2f / 3f)
+                                    )
+                                    .padding(dimensionResource(id = R.dimen.padding_from_edge)) // padding до shadow
+                                    .shadow(
+                                        10.dp,
+                                        shape = RoundedCornerShape(8.dp)
+                                    ) // shadow с закруглением
+                                    .clip(RoundedCornerShape(8.dp)) // Clip для правильной тени
+                                    .background(MaterialTheme.colorScheme.surfaceContainerHighest),
+                                verticalArrangement = Arrangement.Center,
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                if (pagerState.settledPage == pageIndex && albumUiState.currentPage == pageIndex + 1) {
+                                    updateCurrentPage(pagerState.settledPage + 1)
+                                    CanvasBody(
+                                        pageSize = pageSize,
+                                        elements = addedElements.getOrDefault(
+                                            albumUiState.currentPage,
+                                            emptyList()
+                                        ),
+                                        onUpdate = onUpdate,
+                                        modifier = Modifier
+                                            .fillMaxSize()
+                                            .border(
+                                                width = paddingSizeForPage,
+                                                color = if (isNearEdge) Color.Red.copy(alpha = 0.3f) else Color.Unspecified,
+                                                shape = RoundedCornerShape(8.dp)
+                                            )
+                                            .padding(paddingSizeForPage)
+                                            .onSizeChanged { newSize ->
+                                                pageSize = newSize
+                                            },
+                                        comeToTheEdge = { isNearEdge = it },
+                                        onElementRemove = onDelete,
+                                        onCancelDelete = onCancelDelete,
+                                        currentPage = albumUiState.currentPage,
+                                        focusManager = focusManager,
+                                        sheetState = sheetState,
+                                        onLongClick = { showBottom, settedElement ->
+                                            showBottomSheet = showBottom
+                                            selectedElementId = settedElement
                                         },
-                                    comeToTheEdge = { isNearEdge = it },
-                                    onElementRemove = onDelete,
-                                    onCancelDelete = onCancelDelete,
-                                    currentPage = albumUiState.currentPage,
-                                    focusManager = focusManager,
-                                    sheetState = sheetState,
-                                    onLongClick = { showBottom, settedElement ->
-                                        showBottomSheet = showBottom
-                                        selectedElementId = settedElement
-                                    },
-                                    showBottomSheet = showBottomSheet,
-                                    selectedElementId = selectedElementId
-                                )
-                            } else {
-                                Column(
-                                    modifier = Modifier.fillMaxSize(),
-                                    horizontalAlignment = Alignment.CenterHorizontally,
-                                    verticalArrangement = Arrangement.Center
-                                ) {
-                                    //CircularProgressIndicator()
+                                        showBottomSheet = showBottomSheet,
+                                        selectedElementId = selectedElementId
+                                    )
+                                } else {
+                                    Column(
+                                        modifier = Modifier.fillMaxSize(),
+                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                        verticalArrangement = Arrangement.Center
+                                    ) {
+                                        //CircularProgressIndicator()
+                                    }
                                 }
                             }
                         }

@@ -38,13 +38,17 @@ class EditPagesViewModel(
 
     init {
         viewModelScope.launch {
+            val flag = albumsRepository.getPageOrientationForAlbum(albumId)
             albumsRepository
                 .getAlbumDetailsStreamViaForeignKey(albumId)
                 .filterNotNull()
                 .collect { albumDetails ->
                     pagesUiState = albumDetailedListToUiState(albumDetails, isEditing = true)
                     pagesUiState =
-                        pagesUiState.copy(pageNumber = pagesUiState.pagesMap.keys.maxOrNull() ?: 0)
+                        pagesUiState.copy(
+                            pageNumber = pagesUiState.pagesMap.keys.maxOrNull() ?: 0,
+                            pageOrientation = flag
+                        )
                 }
         }
     }
@@ -60,6 +64,15 @@ class EditPagesViewModel(
     fun addNewPage() {
         //val newPagesNumber = pagesUiState.pageNumber + 1
         pagesUiState = pagesUiState.copy(pageNumber = pagesUiState.pageNumber + 1)
+    }
+
+    fun updatePageOrientation(orientation: Boolean = false){
+        val newPagesMap = pagesUiState.pagesMap.mapValues { (_, pageElements) ->
+            pageElements.map { pageElement ->
+                pageElement.copy(offsetX = pageElement.offsetY, offsetY = pageElement.offsetX)
+            }
+        }
+        pagesUiState = pagesUiState.copy(pagesMap = newPagesMap, pageOrientation = orientation, changed = true)
     }
 
     fun updateCurrentPage(newCurrentPage: Int) {
@@ -93,7 +106,7 @@ class EditPagesViewModel(
     }
 
     fun deletePage(pageNumber: Int) {
-        var mutablePagesMap = emptyMap<Int, List<PageElement>>().toMutableMap()
+        val mutablePagesMap = emptyMap<Int, List<PageElement>>().toMutableMap()
         pagesUiState.pagesMap.filterNot { content ->
             content.key == pageNumber
         }.forEach { (key, value) ->
@@ -132,7 +145,7 @@ class EditPagesViewModel(
         elementId: Int,
         pageWidth: Int,
         pageHeight: Int,
-        stickerSize: IntSize /*todo исправить на element*/
+        elementSize: IntSize
     ) {
         val currentPageElements = pagesUiState.pagesMap[pageNumber]?.toMutableList()
 
@@ -140,9 +153,9 @@ class EditPagesViewModel(
         currentPageElements?.forEachIndexed { index, pageElement ->
             if (pageElement.id == elementId) {
                 val newPositionX = pageElement.offsetX.coerceAtLeast(0f)
-                    .coerceAtMost((pageWidth - stickerSize.width) / pageWidth.toFloat())
+                    .coerceAtMost((pageWidth - elementSize.width) / pageWidth.toFloat())
                 val newPositionY = pageElement.offsetY.coerceAtLeast(0f)
-                    .coerceAtMost((pageHeight - stickerSize.height) / pageHeight.toFloat())
+                    .coerceAtMost((pageHeight - elementSize.height) / pageHeight.toFloat())
                 currentPageElements[index] =
                     pageElement.copy(offsetY = newPositionY, offsetX = newPositionX)
                 return@forEachIndexed
@@ -160,8 +173,9 @@ class EditPagesViewModel(
     }
 
     suspend fun savePagesForAlbum(context: Context) {
+        val pageOrientation = pagesUiState.pageOrientation
+
         pagesUiState.pagesMap.map { pageContent ->
-            Log.d("page", "$pageContent")
 
             val pageNumber = pageContent.key
 
@@ -170,10 +184,7 @@ class EditPagesViewModel(
                 val albumDetailedDb = pagesUiState.toAlbumDetailedDbClass(pageNumber, pageElement)
 
                 val insertedId = albumsRepository.insertAlbumDetails(albumDetailedDb)
-                Log.d(
-                    "save",
-                    "insertedId: $insertedId\n dbClass: $albumDetailedDb\n element: ${pageElement.id}, ${pageElement.type}"
-                )
+
                 /**
                  * if we save image we need to reload real path
                  */
@@ -184,7 +195,7 @@ class EditPagesViewModel(
                         insertedId.toInt(),
                         "image_element"
                     ).onSuccess { permanentUri ->
-
+                        Log.d("orientation1", pagesUiState.pageOrientation.toString())
                         val updatedPageElement =
                             albumDetailedDb.copy(
                                 id = insertedId.toInt(),
@@ -203,7 +214,9 @@ class EditPagesViewModel(
                 }
             }
         }
-        Log.d("deleted", deletedElements.toString())
+
+        albumsRepository.updatePageOrientation(albumId = albumId, newPageOrientation = pageOrientation)
+
         deletedElements.forEach { elementId ->
             val selectedElement: AlbumDetailed? =
                 albumsRepository.getAlbumDetailsStream(elementId).first()
