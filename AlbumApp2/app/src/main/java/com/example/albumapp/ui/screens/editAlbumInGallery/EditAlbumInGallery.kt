@@ -233,6 +233,7 @@ fun DateTimePickerForEdit(
             id = R.string.add_date_of_end
         )
     var selectedEndDateText: String = albumUiState.endDateOfActivity
+
     if (selectedDateText != "" && selectedEndDateText == "") {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -257,6 +258,9 @@ fun DateTimePickerForEdit(
     }
 
     if (chooseEndOfEvent || selectedEndDateText != "") {
+
+        var showEndDatePicker by remember { mutableStateOf(false) }
+
         val endDatePickerState = rememberDatePickerState(
             selectableDates = object : SelectableDates {
                 override fun isSelectableDate(utcTimeMillis: Long): Boolean {
@@ -265,12 +269,13 @@ fun DateTimePickerForEdit(
                 }
             }
         )
+
         TextFieldForDates(
             labelForDate = R.string.end_date_of_event_field,
             selectedDateText = selectedEndDateText,
-            onIconClick = { showDatePicker = !showDatePicker },
-            selected = showDatePicker,
-            onDismiss = { showDatePicker = false },
+            onIconClick = { showEndDatePicker = !showEndDatePicker },
+            selected = showEndDatePicker,
+            onDismiss = { showEndDatePicker = false },
             onSave = {
                 onItemValueChange(
                     albumUiState.copy(
@@ -280,7 +285,7 @@ fun DateTimePickerForEdit(
                         ).format(endDatePickerState.selectedDateMillis!!)
                     )
                 )
-                showDatePicker = false
+                showEndDatePicker = false
             },
             datePickerState = endDatePickerState
         )
