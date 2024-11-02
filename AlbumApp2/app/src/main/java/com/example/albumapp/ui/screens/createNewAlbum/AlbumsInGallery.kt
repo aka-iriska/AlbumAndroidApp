@@ -85,7 +85,6 @@ object CreateNewAlbumDestination : NavigationDestination {
     override val titleRes = R.string.create_new_album_on_home_screen
 }
 
-/*TODO redo colors and to add date of activity*/
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CreateNewAlbumInGallery(
@@ -176,8 +175,6 @@ fun EnterAlbumDetails(
             }
         }
 
-
-    /*TODO make lazy column*/
     LazyColumn(
         /*TODO change padding to dimens one*/
         modifier = modifier
@@ -327,7 +324,6 @@ fun EnterAlbumDetails(
 
 }
 
-/*TODO make end date later than start date*/
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DateTimePicker(
@@ -342,7 +338,7 @@ fun DateTimePicker(
     val datePickerState = rememberDatePickerState()
     var selectedDate by rememberSaveable { mutableStateOf<Long?>(null) }
 
-    var selectedDateText: String = ""
+    var selectedDateText = ""
     if (selectedDate != null) {
         val formattedDate =
             SimpleDateFormat("MM-dd-yyyy", Locale.getDefault()).format(Date(selectedDate!!))
@@ -402,7 +398,7 @@ fun DateTimePicker(
         var showEndDatePicker by remember { mutableStateOf(false) }
         var selectedEndDate by rememberSaveable { mutableStateOf<Long?>(null) }
 
-        var selectedEndDateText: String = ""
+        var selectedEndDateText = ""
         if (selectedEndDate != null) {
             val formattedEndDate =
                 SimpleDateFormat("MM-dd-yyyy", Locale.getDefault()).format(Date(selectedEndDate!!))

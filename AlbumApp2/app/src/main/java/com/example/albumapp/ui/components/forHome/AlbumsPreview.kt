@@ -22,7 +22,6 @@ import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
@@ -30,25 +29,22 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.rememberAsyncImagePainter
 import com.example.albumapp.ui.screens.createNewAlbum.Album
-import com.example.albumapp.ui.theme.AlbumAppTheme
 
 
 @Composable
 fun AlbumsOnHomeScreen(
     onEditClick: (Int) -> Unit,
     onAlbumClick: (Int) -> Unit,
-    albumList: List<Album> = emptyList(),
-    onPlusButtonClick: () -> Unit,/*todo create the same float button*/
-    modifier: Modifier = Modifier
+    onPlusButtonClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    albumList: List<Album> = emptyList()
 ) {
     Column(
         modifier = modifier
@@ -134,11 +130,8 @@ fun EveryAlbumCard(
 ) {
     val imageUriString = albumElement.imageCover
     val imageUri: Uri? = if (imageUriString.isNotEmpty()) Uri.parse(imageUriString) else null
-    val contentColor: Color = MaterialTheme.colorScheme.onSecondaryContainer
     val openAlertDialog = remember { mutableStateOf(false) }
 
-
-    /*TODO сделать норм алимацию нажатия, а то нажатие квадратное*/
     ElevatedCard(
         modifier = modifier
             .aspectRatio(5f / 3f),
@@ -204,44 +197,4 @@ fun EveryAlbumCard(
     }
 
 }
-
-
-@Preview(showBackground = true)
-@Composable
-fun AlbumsPreview() {
-    AlbumAppTheme {
-        Surface(modifier = Modifier.fillMaxSize()) {
-            AlbumsOnHomeScreen(
-                {},
-                {},
-                listOf(
-                    Album(
-                        1,
-                        "Egypt",
-                        "user",
-                        "how my boyfriend and I were in Sharm El Sheikh" +
-                                "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffaaaaaaaaaaaaa",
-                        "",
-                        dateOfCreation = "",
-                        endDateOfActivity = "",
-                        dateOfActivity = "2022-10-10"
-                    ),
-                    Album(
-                        2,
-                        "France",
-                        "user",
-                        "",
-                        "",
-                        endDateOfActivity = "",
-                        dateOfCreation = "",
-                        dateOfActivity = ""
-                    )
-                ),
-                {}
-            )
-
-        }
-    }
-}
-
 

@@ -55,7 +55,7 @@ fun MinimalDialog(
     modifier: Modifier = Modifier,
     albumsViewModel: AlbumsViewModel = viewModel(factory = AppViewModelProvider.Factory)
 ) {
-    /*TODO add edit button */
+
     val coroutineScope = rememberCoroutineScope()
     val openEditingButton = remember {
         mutableStateOf(false)
@@ -63,6 +63,7 @@ fun MinimalDialog(
     val openSureDelete = remember {
         mutableStateOf(false)
     }
+
     Dialog(onDismissRequest = onDismissRequest) {
         ElevatedCard(
             modifier = Modifier
