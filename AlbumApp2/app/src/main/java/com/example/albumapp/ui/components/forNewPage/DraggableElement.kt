@@ -51,6 +51,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
@@ -62,6 +63,7 @@ import coil.compose.AsyncImagePainter
 import coil.compose.rememberAsyncImagePainter
 import coil.decode.SvgDecoder
 import coil.request.ImageRequest
+import com.example.albumapp.R
 import com.example.albumapp.ui.screens.currentAlbum.ElementType
 import com.example.albumapp.ui.screens.currentAlbum.PageElement
 import com.example.albumapp.ui.screens.currentAlbum.stickersMap
@@ -161,14 +163,14 @@ fun DraggableElement(
                     zIndex = element.zIndex
                 ), element.id
             )
-            val centerX = position.x + elementSize.width / 2
+            //val centerX = position.x + elementSize.width / 2
             val centerY = position.y + elementSize.height / 2
             // Проверяем, находится ли стикер за пределами padding
-            if (centerX - elementSize.width / 4 < 0 || centerY - elementSize.height / 4 < 0 || centerX + elementSize.width / 4 >= pageSize.width || centerY + elementSize.height / 4 >= pageSize.height) {
+            if (/*centerX - elementSize.width / 4 < 0 || centerY - elementSize.height / 4 < 0 || centerX + elementSize.width / 4 >= pageSize.width ||*/ centerY + elementSize.height / 4 >= pageSize.height) {
                 onNear(true)
             } else onNear(false)
             // Вычисляем центр элемента
-            if (centerX - elementSize.width / 5 < 0 || centerY - elementSize.height / 5 < 0 || centerX + elementSize.width / 5 >= pageSize.width || centerY + elementSize.height / 5 >= pageSize.height) {
+            if (/*centerX - elementSize.width / 5 < 0 || centerY - elementSize.height / 5 < 0 || centerX + elementSize.width / 5 >= pageSize.width ||*/ centerY + elementSize.height / 5 >= pageSize.height) {
                 onDelete(elementSize) // Вызываем onDelete, если стикер попадает в padding
             }
         })
@@ -361,7 +363,9 @@ fun SliderWithLabel(
     max: Float,
     onValueChange: (Float) -> Unit
 ) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(
+        dimensionResource(R.dimen.padding_from_edge)
+    )) {
         Text("$label: ${value.roundToInt()}")
         Slider(value = value, onValueChange = onValueChange, valueRange = min..max)
     }

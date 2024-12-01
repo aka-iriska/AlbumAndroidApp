@@ -6,6 +6,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -21,6 +22,7 @@ import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import okhttp3.internal.toImmutableList
+import kotlin.math.min
 
 class EditPagesViewModel(
     savedStateHandle: SavedStateHandle, private val albumsRepository: AlbumsRepository
@@ -66,13 +68,20 @@ class EditPagesViewModel(
         pagesUiState = pagesUiState.copy(pageNumber = pagesUiState.pageNumber + 1)
     }
 
-    fun updatePageOrientation(orientation: Boolean = false){
+    fun updatePageOrientation(orientation: Boolean = false, pageSize: IntSize) {
+
         val newPagesMap = pagesUiState.pagesMap.mapValues { (_, pageElements) ->
             pageElements.map { pageElement ->
                 pageElement.copy(offsetX = pageElement.offsetY, offsetY = pageElement.offsetX)
             }
         }
-        pagesUiState = pagesUiState.copy(pagesMap = newPagesMap, pageOrientation = orientation, changed = true)
+
+        pagesUiState =
+            pagesUiState.copy(
+                pagesMap = newPagesMap,
+                pageOrientation = !orientation,
+                changed = true
+            )
     }
 
     fun updateCurrentPage(newCurrentPage: Int) {
@@ -215,7 +224,10 @@ class EditPagesViewModel(
             }
         }
 
-        albumsRepository.updatePageOrientation(albumId = albumId, newPageOrientation = pageOrientation)
+        albumsRepository.updatePageOrientation(
+            albumId = albumId,
+            newPageOrientation = pageOrientation
+        )
 
         deletedElements.forEach { elementId ->
             val selectedElement: AlbumDetailed? =

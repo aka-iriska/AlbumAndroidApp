@@ -21,6 +21,9 @@ import com.example.albumapp.ui.theme.AlbumAppTheme
  * AppViewModelProvider ->
  * ViewModel in every screen
  */
+
+const val PART_OF_PAGE_FOR_PADDING = 22
+
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

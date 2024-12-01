@@ -12,7 +12,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -53,6 +52,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.focus.FocusManager
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
@@ -68,6 +68,7 @@ import coil.compose.AsyncImagePainter
 import coil.compose.rememberAsyncImagePainter
 import coil.decode.SvgDecoder
 import coil.request.ImageRequest
+import com.example.albumapp.PART_OF_PAGE_FOR_PADDING
 import com.example.albumapp.R
 import com.example.albumapp.data.AppViewModelProvider
 import com.example.albumapp.ui.components.forCountPages.ShowActivePageByRadioButton
@@ -185,7 +186,7 @@ fun CreateNewPagesBody(
     onCancelDelete: (Int, Int, Int, Int, IntSize) -> Unit,
     addNewPage: () -> Unit,
     updateCurrentPage: (Int) -> Unit,
-    updatePageOrientation: (Boolean) -> Unit,
+    updatePageOrientation: (Boolean, IntSize) -> Unit,
 
     ) {
     val addedElements = albumUiState.pagesMap
@@ -402,7 +403,7 @@ fun CreateNewPagesBody(
 
                 item {
                     IconButton(onClick = {
-                        updatePageOrientation(!albumUiState.pageOrientation)
+                        updatePageOrientation(albumUiState.pageOrientation, pageSize)
                     }) {
                         Icon(
                             painterResource(R.drawable.rotate_pages),
@@ -410,22 +411,6 @@ fun CreateNewPagesBody(
                             contentDescription = "Change pages rotation"
                         )
                     }
-                    /*IconToggleButton(checked = settingsPressed,
-                        onCheckedChange = { settingsPressed = it }) {
-                        if (settingsPressed) {
-                            Icon(
-                                Icons.Filled.Settings,
-                                contentDescription = "Choose Image",
-                                modifier = Modifier.stickerChoice()
-                            )
-                        } else {
-                            Icon(
-                                Icons.Outlined.Settings,
-                                contentDescription = "Add image",
-                                modifier = Modifier.stickerChoice()
-                            )
-                        }
-                    }*/
                 }
             }
         }
@@ -440,8 +425,8 @@ fun CreateNewPagesBody(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
-                var isNearEdge by remember { mutableStateOf(false) } // Для подсветки всей `Column`
-                val paddingSizeForPage = (min(pageSize.height, pageSize.width) / 22).dp
+                var isNearBottomEdge by remember { mutableStateOf(false) } // Для подсветки всей `Column`
+                val paddingSizeForPage = (min(pageSize.height, pageSize.width) / PART_OF_PAGE_FOR_PADDING).dp
                 val pagerState = rememberPagerState(pageCount = { pageNumber })
 
                 /**
@@ -490,7 +475,13 @@ fun CreateNewPagesBody(
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
                                 if (pagerState.settledPage == pageIndex && albumUiState.currentPage == pageIndex + 1) {
+
+                                    val gradientBrush = Brush.verticalGradient(
+                                        colors = listOf(Color.Transparent, Color.Transparent,MaterialTheme.colorScheme.error.copy(alpha = 0.3f))
+                                    )
+
                                     updateCurrentPage(pagerState.settledPage + 1)
+
                                     CanvasBody(
                                         pageSize = pageSize,
                                         elements = addedElements.getOrDefault(
@@ -500,16 +491,15 @@ fun CreateNewPagesBody(
                                         onUpdate = onUpdate,
                                         modifier = Modifier
                                             .fillMaxSize()
-                                            .border(
-                                                width = paddingSizeForPage,
-                                                color = if (isNearEdge) Color.Red.copy(alpha = 0.3f) else Color.Unspecified,
-                                                shape = RoundedCornerShape(8.dp)
+                                            .then(
+                                                if (isNearBottomEdge) Modifier.background(brush = gradientBrush)
+                                                else Modifier.background(color = Color.Transparent) // Используем пустой Modifier, если подсветка не нужна
                                             )
                                             .padding(paddingSizeForPage)
                                             .onSizeChanged { newSize ->
                                                 pageSize = newSize
                                             },
-                                        comeToTheEdge = { isNearEdge = it },
+                                        comeToTheEdge = { isNearBottomEdge = it },
                                         onElementRemove = onDelete,
                                         onCancelDelete = onCancelDelete,
                                         currentPage = albumUiState.currentPage,
