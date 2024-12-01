@@ -20,7 +20,7 @@ import com.example.albumapp.ui.theme.AlbumAppTheme
 @Composable
 fun FrameForAlbum(
     modifier: Modifier = Modifier,
-    FrameColor: Color = MaterialTheme.colorScheme.surfaceContainerLow,
+    frameColor: Color = MaterialTheme.colorScheme.surfaceContainerLow,
 ) {
     Box(
         modifier = modifier
@@ -29,7 +29,7 @@ fun FrameForAlbum(
                 Brush.verticalGradient(
                     colors = listOf(
                         Color.Unspecified,
-                        FrameColor.copy(alpha = 0.7f)
+                        frameColor.copy(alpha = 0.7f)
                     )
                 )
             )
