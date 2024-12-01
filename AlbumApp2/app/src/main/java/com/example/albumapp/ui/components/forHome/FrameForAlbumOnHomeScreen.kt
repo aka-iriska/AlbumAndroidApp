@@ -22,22 +22,18 @@ fun FrameForAlbum(
     FrameColor: Color = MaterialTheme.colorScheme.surfaceContainerLow,
     modifier: Modifier = Modifier
 ) {
-    //Box(modifier = modifier.fillMaxSize()) {
     Box(
         modifier = modifier
             .fillMaxSize()
             .background(
                 Brush.verticalGradient(
                     colors = listOf(
-                        //FrameColor.copy(alpha = 0.3f),
-                        // Color.Unspecified,
                         Color.Unspecified,
                         FrameColor.copy(alpha = 0.7f)
                     )
                 )
             )
     ) {}
-    //}
 }
 
 @Preview(showBackground = true)

@@ -168,7 +168,6 @@ fun EveryAlbumCard(
 
                 Text(
                     text = albumElement.title,//.uppercase(),
-
                     fontFamily = FontFamily.Serif,
                     fontWeight = FontWeight.ExtraBold,
                     letterSpacing = 1.sp,
