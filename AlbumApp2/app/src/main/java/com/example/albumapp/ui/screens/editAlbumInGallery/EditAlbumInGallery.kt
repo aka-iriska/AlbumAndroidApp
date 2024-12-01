@@ -300,7 +300,7 @@ fun DateTimePickerForEdit(
                         endDateOfActivity = SimpleDateFormat(
                             "MM-dd-yyyy",
                             Locale.getDefault()
-                        ).format(Date(endDatePickerState.selectedDateMillis!!)) /*todo исправить ошибку*/
+                        ).format(Date(endDatePickerState.selectedDateMillis!!))
                     )
                 )
                 showEndDatePicker = false
