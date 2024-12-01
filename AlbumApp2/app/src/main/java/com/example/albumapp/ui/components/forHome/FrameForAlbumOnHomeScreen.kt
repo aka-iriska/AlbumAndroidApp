@@ -19,9 +19,9 @@ import com.example.albumapp.ui.theme.AlbumAppTheme
 
 @Composable
 fun FrameForAlbum(
+    modifier: Modifier = Modifier,
     FrameColor: Color = MaterialTheme.colorScheme.surfaceContainerLow,
-    modifier: Modifier = Modifier
-) {
+    ) {
     Box(
         modifier = modifier
             .fillMaxSize()
