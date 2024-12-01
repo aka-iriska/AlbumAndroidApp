@@ -60,13 +60,15 @@ fun DisplayElement(
     var rotation by remember { mutableFloatStateOf(element.rotation) } // для вращения
 
     val orienter = min(pageSize.width, pageSize.height)
-    
+
     var scale by remember {
         mutableFloatStateOf(
             element.scale * orienter
         )
     } // для увеличения
-    if (element.resource=="scotch"){Log.d("Scsize", "$scale, ${pageSize.width}")}
+    if (element.resource == "scotch") {
+        Log.d("Scsize", "$scale, ${pageSize.width}")
+    }
 
     val elementHeight = (scale).dp
 
@@ -83,7 +85,7 @@ fun DisplayElement(
 
     var textForTextField by remember { mutableStateOf("") }
 
-    if (element.type == ElementType.TEXT_FIELD){
+    if (element.type == ElementType.TEXT_FIELD) {
         val (fontSizeString, colorString, text) = element.resource.split("/")
         fontSize = fontSizeString.toFloat()
         colorForTextField = Color(android.graphics.Color.parseColor(colorString))
@@ -154,7 +156,8 @@ fun DisplayElement(
                     textStyle = TextStyle(
                         fontFamily = bodyFontFamily,
                         color = colorForTextField,
-                        fontSize = fontSize.sp),
+                        fontSize = fontSize.sp
+                    ),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedContainerColor = Color.Transparent,
                         unfocusedContainerColor = Color.Transparent,

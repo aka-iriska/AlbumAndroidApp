@@ -36,6 +36,7 @@ interface AlbumsRepository {
     suspend fun getAlbumTitleForDetailed(albumId: Int): String
 
     suspend fun updatePageOrientation(albumId: Int, newPageOrientation: Boolean)
+
     /**
      * Insert album in the data source
      */
@@ -79,5 +80,5 @@ interface AlbumsRepository {
     /**
      * Get the page orientation for album
      */
-    suspend fun getPageOrientationForAlbum(albumId: Int) : Boolean
+    suspend fun getPageOrientationForAlbum(albumId: Int): Boolean
 }

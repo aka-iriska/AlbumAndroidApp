@@ -72,7 +72,7 @@ fun CurrentAlbum(
     val uiState = albumViewModel.pagesUiState
     var albumTitle by remember { mutableStateOf("") }
 
-    val editingButtonShown = rememberSaveable{ mutableStateOf(true) }
+    val editingButtonShown = rememberSaveable { mutableStateOf(true) }
 
     Scaffold(
         topBar = {
@@ -161,8 +161,7 @@ fun CurrentAlbumBody(
                     Column(
                         modifier = Modifier
                             .fillMaxSize()
-                            .verticalScroll(rememberScrollState())
-                        ,
+                            .verticalScroll(rememberScrollState()),
                         verticalArrangement = Arrangement.Center
                     ) {
                         Box(

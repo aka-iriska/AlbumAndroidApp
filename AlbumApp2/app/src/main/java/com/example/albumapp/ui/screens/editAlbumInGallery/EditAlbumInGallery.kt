@@ -272,14 +272,15 @@ fun DateTimePickerForEdit(
         var showEndDatePicker by remember { mutableStateOf(false) }
 
         val endDatePickerState = rememberDatePickerState(
-            initialSelectedDateMillis = selectedEndDateText.takeIf { it.isNotBlank() }?.let { dateString ->
-                val dateFormatter = SimpleDateFormat("MM-dd-yyyy", Locale.getDefault())
-                try {
-                    dateFormatter.parse(dateString)?.time
-                } catch (e: Exception) {
-                    null // Если парсинг не удался, возвращаем null
-                }
-            } ?: System.currentTimeMillis(), // Если дата пустая или некорректная, берем текущую
+            initialSelectedDateMillis = selectedEndDateText.takeIf { it.isNotBlank() }
+                ?.let { dateString ->
+                    val dateFormatter = SimpleDateFormat("MM-dd-yyyy", Locale.getDefault())
+                    try {
+                        dateFormatter.parse(dateString)?.time
+                    } catch (e: Exception) {
+                        null // Если парсинг не удался, возвращаем null
+                    }
+                } ?: System.currentTimeMillis(), // Если дата пустая или некорректная, берем текущую
             selectableDates = object : SelectableDates {
                 override fun isSelectableDate(utcTimeMillis: Long): Boolean {
                     return utcTimeMillis > (datePickerState.selectedDateMillis

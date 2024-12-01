@@ -36,7 +36,7 @@ class OfflineAlbumsRepository(private val albumDao: AlbumsDAO) : AlbumsRepositor
     override fun getAlbumDetailsStreamViaForeignKey(albumId: Int): Flow<List<AlbumDetailed>> =
         albumDao.getAlbumDetailsStreamViaForeignKey(albumId)
 
-    override suspend fun getPageOrientationForAlbum(albumId: Int) : Boolean {
+    override suspend fun getPageOrientationForAlbum(albumId: Int): Boolean {
         return albumDao.getPageOrientationForAlbum(albumId = albumId).firstOrNull() ?: false
     }
 

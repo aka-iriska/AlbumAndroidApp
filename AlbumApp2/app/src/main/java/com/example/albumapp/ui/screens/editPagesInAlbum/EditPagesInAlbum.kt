@@ -426,7 +426,8 @@ fun CreateNewPagesBody(
                 verticalArrangement = Arrangement.Center
             ) {
                 var isNearBottomEdge by remember { mutableStateOf(false) } // Для подсветки всей `Column`
-                val paddingSizeForPage = (min(pageSize.height, pageSize.width) / PART_OF_PAGE_FOR_PADDING).dp
+                val paddingSizeForPage =
+                    (min(pageSize.height, pageSize.width) / PART_OF_PAGE_FOR_PADDING).dp
                 val pagerState = rememberPagerState(pageCount = { pageNumber })
 
                 /**
@@ -477,7 +478,11 @@ fun CreateNewPagesBody(
                                 if (pagerState.settledPage == pageIndex && albumUiState.currentPage == pageIndex + 1) {
 
                                     val gradientBrush = Brush.verticalGradient(
-                                        colors = listOf(Color.Transparent, Color.Transparent,MaterialTheme.colorScheme.error.copy(alpha = 0.3f))
+                                        colors = listOf(
+                                            Color.Transparent,
+                                            Color.Transparent,
+                                            MaterialTheme.colorScheme.error.copy(alpha = 0.3f)
+                                        )
                                     )
 
                                     updateCurrentPage(pagerState.settledPage + 1)

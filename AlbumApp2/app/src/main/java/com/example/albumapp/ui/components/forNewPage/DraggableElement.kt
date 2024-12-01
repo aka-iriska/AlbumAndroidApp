@@ -274,7 +274,8 @@ fun DraggableElement(
                         textStyle = TextStyle(
                             fontFamily = bodyFontFamily,
                             color = colorForTextField,
-                            fontSize = fontSize.sp),
+                            fontSize = fontSize.sp
+                        ),
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedContainerColor = Color.Transparent,
                             unfocusedContainerColor = Color.Transparent,
@@ -363,9 +364,11 @@ fun SliderWithLabel(
     max: Float,
     onValueChange: (Float) -> Unit
 ) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(
-        dimensionResource(R.dimen.padding_from_edge)
-    )) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(
+            dimensionResource(R.dimen.padding_from_edge)
+        )
+    ) {
         Text("$label: ${value.roundToInt()}")
         Slider(value = value, onValueChange = onValueChange, valueRange = min..max)
     }
@@ -375,7 +378,7 @@ fun SliderWithLabel(
 @Preview
 @Composable
 fun SliderPreview() {
-    AlbumAppTheme() {
+    AlbumAppTheme {
         var number = 0f
         SliderWithLabel("number", number, 0f, 100f) { number = it }
         val sheetState = rememberModalBottomSheetState()
