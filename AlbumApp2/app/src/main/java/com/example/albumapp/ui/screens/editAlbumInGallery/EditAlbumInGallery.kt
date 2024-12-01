@@ -203,9 +203,19 @@ fun DateTimePickerForEdit(
      * For Date Picker
      */
     var showDatePicker by remember { mutableStateOf(false) }
-    val datePickerState = rememberDatePickerState()
 
     var selectedDateText: String = albumUiState.dateOfActivity
+
+    val datePickerState = rememberDatePickerState(
+        initialSelectedDateMillis = selectedDateText.takeIf { it.isNotBlank() }?.let { dateString ->
+            val dateFormatter = SimpleDateFormat("MM-dd-yyyy", Locale.getDefault())
+            try {
+                dateFormatter.parse(dateString)?.time
+            } catch (e: Exception) {
+                null // Если парсинг не удался, возвращаем null
+            }
+        } ?: System.currentTimeMillis() // Если дата пустая или некорректная, берем текущую
+    )
 
     TextFieldForDates(
         labelForDate = R.string.date_of_the_event,
@@ -262,6 +272,14 @@ fun DateTimePickerForEdit(
         var showEndDatePicker by remember { mutableStateOf(false) }
 
         val endDatePickerState = rememberDatePickerState(
+            initialSelectedDateMillis = selectedEndDateText.takeIf { it.isNotBlank() }?.let { dateString ->
+                val dateFormatter = SimpleDateFormat("MM-dd-yyyy", Locale.getDefault())
+                try {
+                    dateFormatter.parse(dateString)?.time
+                } catch (e: Exception) {
+                    null // Если парсинг не удался, возвращаем null
+                }
+            } ?: System.currentTimeMillis(), // Если дата пустая или некорректная, берем текущую
             selectableDates = object : SelectableDates {
                 override fun isSelectableDate(utcTimeMillis: Long): Boolean {
                     return utcTimeMillis > (datePickerState.selectedDateMillis
@@ -282,7 +300,7 @@ fun DateTimePickerForEdit(
                         endDateOfActivity = SimpleDateFormat(
                             "MM-dd-yyyy",
                             Locale.getDefault()
-                        ).format(endDatePickerState.selectedDateMillis!!)
+                        ).format(Date(endDatePickerState.selectedDateMillis!!)) /*todo исправить ошибку*/
                     )
                 )
                 showEndDatePicker = false
