@@ -1,6 +1,9 @@
 package com.example.albumapp.ui.screens.home
 
 
+import android.app.Activity
+import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -32,6 +35,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -74,12 +78,28 @@ fun HomeScreen(
     var openSortOptions: Boolean by remember { mutableStateOf(false) }
     var dropSortMenu: Boolean by remember { mutableStateOf(false) }
     var finalChoice: SortOptions by rememberSaveable { mutableStateOf(SortOptions.CREATE) }
+
+    var lastBackPressedTime by remember { mutableStateOf(0L) }
+
+    val context = LocalContext.current
+
     Scaffold(topBar = {
         AppTopBar(
             title = stringResource(id = HomeDestination.titleRes),
             canNavigateBack = false,
             modifier = Modifier.clickable { openSortOptions = !openSortOptions })
     }) { innerpadding ->
+        BackHandler {
+            val currentTime = System.currentTimeMillis()
+            if (currentTime - lastBackPressedTime < 3000) {
+                // Если нажали "Назад" дважды за 3 секунды, выходим из приложения
+                (context as? Activity)?.finish()
+            } else {
+                // Если это первое нажатие, показываем сообщение и обновляем время
+                lastBackPressedTime = currentTime
+                Toast.makeText(context, "Нажмите ещё раз для выхода", Toast.LENGTH_SHORT).show()
+            }
+        }
         Column(
             modifier = modifier
                 .fillMaxSize()
