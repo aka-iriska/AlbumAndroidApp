@@ -2,6 +2,7 @@ package com.example.albumapp.ui.screens.createNewAlbum
 
 import android.content.Context
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -84,6 +85,7 @@ class AlbumsViewModel(private val albumsRepository: AlbumsRepository) : ViewMode
 
                     Log.d("id", insertedId.toString())
                 }.onFailure { exception ->
+                    Toast.makeText(context, "Failed to save image", Toast.LENGTH_LONG).show()
                     // Обработка ошибки сохранения изображения
                     Log.e("Error", "Failed to save image: ${exception.message}")
                 }
@@ -106,8 +108,7 @@ class AlbumsViewModel(private val albumsRepository: AlbumsRepository) : ViewMode
                 )
             )
         }
-
-
+        else Toast.makeText(context, "Failed to save album", Toast.LENGTH_LONG).show()
     }
 
     suspend fun deleteAlbum(id: Int) {
